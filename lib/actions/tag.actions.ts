@@ -14,7 +14,7 @@ import Interaction from "@/database/interaction.model";
 
 export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { userId } = params;
 
@@ -59,7 +59,7 @@ export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
 
 export async function getAllTags(params: GetAllTagsParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { searchQuery, filter, page = 1, pageSize = 10 } = params;
 
@@ -111,7 +111,7 @@ export const getQuestionsByTagId = async (
   params: GetQuestionsByTagIdParams
 ) => {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { tagId, searchQuery, page = 1, pageSize = 20 } = params;
 
@@ -157,7 +157,7 @@ export const getQuestionsByTagId = async (
 
 export const getTopPopularTags = async () => {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const popularTags = await Tag.aggregate([
       {
