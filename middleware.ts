@@ -1,24 +1,30 @@
-import { authMiddleware } from "@clerk/nextjs";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// this middleware protects all routes including api routes. Edit this to allow routes to be public
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/question/:id",
+  "/tags",
+  "/tags/:id",
+  "/profile/:id",
+  "/community",
+]);
 
-export default authMiddleware({
-    publicRoutes: [ // publicRoutes is used to specify public routes
-        '/',
-        '/api/webhook',        // / route is now public
-        '/question/:id',
-        '/tags',
-        '/tags/:id',
-        '/profile/:id',
-        '/community',
-    ],
-    ignoredRoutes: [
-      '/api/webhook', '/api/chatgpt'
-    ]
+const isIgnoredRoute = createRouteMatcher(["/api/webhook", "/api/chatgpt"]);
+
+export default clerkMiddleware((auth, req) => {
+  if (isIgnoredRoute(req)) {
+    return;
+  }
+
+  if (!isPublicRoute(req)) {
+    auth().protect();
+  }
 });
-// export const config = {
-//   matcher: ["/((?!.+.[w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
-// };
+
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)","/","/(api|trpc)(.*)"],
-}; 
+  matcher: [
+    "/((?!.+\\.[\\w]+$|_next).*)",
+    "/",
+    "/(api|trpc)(.*)",
+  ],
+};
