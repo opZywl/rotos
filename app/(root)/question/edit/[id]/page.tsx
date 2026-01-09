@@ -18,6 +18,8 @@ const EditQuestion = async ({ params }: ParamsProps) => {
 
   const mongoUser = await getOrCreateUser({ userId });
 
+  if (mongoUser.needsUsernameSetup) redirect("/onboarding");
+
   const question = await getQuestionById({
     questionId: params.id,
   });

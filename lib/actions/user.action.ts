@@ -48,12 +48,29 @@ export const getOrCreateUser = async (params: { userId: string }) => {
       // User doesn't exist, fetch from Clerk and create
       const clerkUser = await clerkClient.users.getUser(userId);
 
+      // Generate unique username
+      let username = clerkUser.username;
+      if (!username) {
+        // Generate a unique username with timestamp to avoid duplicates
+        const timestamp = Date.now().toString(36);
+        const randomStr = Math.random().toString(36).substring(2, 6);
+        username = `user_${timestamp}${randomStr}`;
+      }
+
+      // Check if username already exists and make it unique if needed
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        username = `${username}_${randomSuffix}`;
+      }
+
       user = await User.create({
         clerkId: userId,
         name: `${clerkUser.firstName || ""}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ""}`.trim() || "User",
-        username: clerkUser.username || `user_${userId.slice(-8)}`,
+        username,
         email: clerkUser.emailAddresses[0]?.emailAddress || "",
         picture: clerkUser.imageUrl,
+        needsUsernameSetup: true,
       });
     }
 
@@ -63,6 +80,54 @@ export const getOrCreateUser = async (params: { userId: string }) => {
     throw error;
   }
 };
+
+export async function setupUsername(params: { clerkId: string; username: string }) {
+  try {
+    await connectToDatabase();
+
+    const { clerkId, username } = params;
+
+    // Check if username is valid (alphanumeric and underscore only, 3-20 chars)
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      return { error: "Username must be 3-20 characters and contain only letters, numbers, and underscores" };
+    }
+
+    // Check if username is already taken
+    const existingUser = await User.findOne({ username, clerkId: { $ne: clerkId } });
+    if (existingUser) {
+      return { error: "Username is already taken" };
+    }
+
+    // Update the user's username and mark setup as complete
+    const updatedUser = await User.findOneAndUpdate(
+      { clerkId },
+      { username, needsUsernameSetup: false },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return { error: "User not found" };
+    }
+
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    console.log(error);
+    return { error: "Failed to update username" };
+  }
+}
+
+export async function checkUsernameAvailable(username: string) {
+  try {
+    await connectToDatabase();
+
+    const existingUser = await User.findOne({ username });
+    return { available: !existingUser };
+  } catch (error) {
+    console.log(error);
+    return { available: false };
+  }
+}
 
 export async function createUser(userData: CreateUserParams) {
   try {
