@@ -22,6 +22,8 @@ import Image from "next/image";
 import { createQuestion, editQuestion } from "@/lib/actions/question.action";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader } from "lucide-react";
+import { improveQuestionTitle, suggestQuestionTags } from "@/lib/actions/ai.action";
+import { toast } from "../ui/use-toast";
 
 interface Props {
   type?: string;
@@ -32,6 +34,8 @@ interface Props {
 const Question = ({ type, mongoUserId, questionData }: Props) => {
   const editorRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImprovingTitle, setIsImprovingTitle] = useState(false);
+  const [isSuggestingTags, setIsSuggestingTags] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -116,6 +120,79 @@ const Question = ({ type, mongoUserId, questionData }: Props) => {
     form.setValue("tags", newTags);
   };
 
+  const handleImproveTitle = async () => {
+    const currentTitle = form.getValues("title").trim();
+    const currentContent = form.getValues("explanation");
+
+    if (!currentTitle || !currentContent) {
+      return toast({
+        title: "Add a title and explanation before improving the title.",
+      });
+    }
+
+    setIsImprovingTitle(true);
+    try {
+      const improvedTitle = await improveQuestionTitle({
+        title: currentTitle,
+        content: currentContent,
+      });
+
+      form.setValue("title", improvedTitle, { shouldValidate: true });
+
+      return toast({
+        title: "Title improved with AI.",
+      });
+    } catch (error) {
+      return toast({
+        title: "Unable to improve title right now.",
+      });
+    } finally {
+      setIsImprovingTitle(false);
+    }
+  };
+
+  const handleSuggestTags = async () => {
+    const currentTitle = form.getValues("title").trim();
+    const currentContent = form.getValues("explanation");
+
+    if (!currentTitle || !currentContent) {
+      return toast({
+        title: "Add a title and explanation before suggesting tags.",
+      });
+    }
+
+    setIsSuggestingTags(true);
+    try {
+      const suggestedTags = await suggestQuestionTags({
+        title: currentTitle,
+        content: currentContent,
+      });
+
+      if (!suggestedTags.length) {
+        return toast({
+          title: "No tags were suggested. Try again with more details.",
+        });
+      }
+
+      const mergedTags = Array.from(
+        new Set([...form.getValues("tags"), ...suggestedTags])
+      ).slice(0, 3);
+
+      form.setValue("tags", mergedTags, { shouldValidate: true });
+      form.clearErrors("tags");
+
+      return toast({
+        title: "Tags suggested with AI.",
+      });
+    } catch (error) {
+      return toast({
+        title: "Unable to suggest tags right now.",
+      });
+    } finally {
+      setIsSuggestingTags(false);
+    }
+  };
+
   return (
     <Form {...form}>
       <form
@@ -127,9 +204,27 @@ const Question = ({ type, mongoUserId, questionData }: Props) => {
           name="title"
           render={({ field }) => (
             <FormItem className="flex w-full flex-col">
-              <FormLabel className="paragraph-semibold text-dark400_light800">
-                Question Title <span className="text-red-600">*</span>
-              </FormLabel>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <FormLabel className="paragraph-semibold text-dark400_light800">
+                  Question Title <span className="text-red-600">*</span>
+                </FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleImproveTitle}
+                  disabled={isImprovingTitle}
+                >
+                  {isImprovingTitle ? (
+                    <>
+                      <Loader className="mr-2 size-4 animate-spin" />
+                      Improving...
+                    </>
+                  ) : (
+                    "Melhorar título"
+                  )}
+                </Button>
+              </div>
               <FormControl className="mt-3.5">
                 <Input
                   className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
@@ -208,9 +303,29 @@ const Question = ({ type, mongoUserId, questionData }: Props) => {
           name="tags"
           render={({ field }) => (
             <FormItem className="flex w-full flex-col">
-              <FormLabel className="paragraph-semibold text-dark400_light800">
-                Tags <span className="text-red-600">*</span>
-              </FormLabel>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <FormLabel className="paragraph-semibold text-dark400_light800">
+                  Tags <span className="text-red-600">*</span>
+                </FormLabel>
+                {type !== "Edit" && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSuggestTags}
+                    disabled={isSuggestingTags}
+                  >
+                    {isSuggestingTags ? (
+                      <>
+                        <Loader className="mr-2 size-4 animate-spin" />
+                        Suggesting...
+                      </>
+                    ) : (
+                      "Sugerir tags"
+                    )}
+                  </Button>
+                )}
+              </div>
               <FormControl className="mt-3.5">
                 <>
                   <Input

@@ -40,6 +40,8 @@ git push origin main
 
 ### 2. Configurar MongoDB Atlas (Banco de Dados)
 
+> **Importante:** o Prisma **não hospeda MongoDB**. O app usa **Mongoose** e precisa de um cluster MongoDB real (ex.: MongoDB Atlas). O site do Prisma é ótimo para **documentação**, mas a criação do banco MongoDB continua sendo feita no Atlas. Use o Prisma apenas como referência de integração se desejar.
+
 1. Acesse [MongoDB Atlas](https://www.mongodb.com/atlas)
 2. Crie uma conta ou faça login
 3. Clique em **"Build a Database"**
@@ -183,6 +185,59 @@ https://rotos-abc123.vercel.app/api/webhook
 2. Tente criar uma conta
 3. Verifique se o usuário aparece no MongoDB Atlas
 4. Tente criar uma pergunta
+
+---
+
+## Guia 100% Online (via Prisma + MongoDB Atlas)
+
+Este passo a passo é **totalmente online** e usa o **site do Prisma** apenas como referência de documentação.
+
+### 1. Abrir documentação oficial do Prisma (referência)
+
+1. Acesse https://www.prisma.io/
+2. Clique em **Docs**
+3. Procure por **MongoDB** para entender conceitos de conexão e boas práticas
+
+> Dica: este projeto não usa Prisma ORM, mas a documentação ajuda a entender strings de conexão e ambiente.
+
+### 2. Criar o MongoDB no Atlas (100% online)
+
+1. Acesse https://www.mongodb.com/atlas
+2. Crie um **cluster gratuito (M0)**
+3. Crie usuário e senha em **Database Access**
+4. Libere IP em **Network Access** com `0.0.0.0/0`
+5. Copie a **connection string** do driver **Node.js**
+
+### 3. Colocar a URL do MongoDB na Vercel
+
+1. Acesse o projeto na **Vercel**
+2. Em **Settings → Environment Variables**, adicione:
+   - `MONGODB_URL` = `mongodb+srv://SEU_USUARIO:SUA_SENHA@cluster0.../`
+3. Salve e **redeploy** o projeto
+
+---
+
+## Troubleshooting: "Application error: a server-side exception has occurred"
+
+Esse erro costuma indicar **variáveis de ambiente faltando** ou **erro de conexão com o banco**.
+
+### Checklist rápido
+
+1. **Verifique os logs na Vercel**
+   - Projeto → **Deployments** → abra o último deploy → **View Logs**
+2. **Confirme as variáveis obrigatórias**
+   - `MONGODB_URL`
+   - `CLERK_SECRET_KEY`
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+   - `NEXT_CLERK_WEBHOOK_SECRET`
+   - `NEXT_PUBLIC_SERVER_URL`
+3. **Confirme o MongoDB Atlas**
+   - IP liberado `0.0.0.0/0`
+   - Usuário e senha corretos
+4. **Force redeploy**
+   - Após atualizar envs, clique em **Redeploy**
+
+Se o erro persistir, verifique nos logs da Vercel qual variável está ausente ou qual endpoint falhou.
 
 ---
 
