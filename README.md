@@ -15,14 +15,14 @@ Uma plataforma de perguntas e respostas construída com Next.js 14, MongoDB, e C
 ## Tecnologias
 
 - **Next.js 14** - Framework React
-- **TypeScript** - Tipagem estática
-- **TailwindCSS** - Estilização
-- **MongoDB** - Banco de dados
-- **Clerk Auth** - Autenticação
-- **Gemini AI** - Respostas com IA
-- **TinyMCE** - Editor de texto rico
-- **Shadcn/ui** - Componentes UI
-- **Zod** - Validação de schemas
+- **TypeScript** - Static typing
+- **TailwindCSS** - Styling
+- **MongoDB** - Database
+- **Clerk Auth** - Authentication
+- **Gemini AI** - AI-powered responses
+- **TinyMCE** - Rich text editor
+- **Shadcn/ui** - UI components
+- **Zod** - Schema validation
 
 ---
 
