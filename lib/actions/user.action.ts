@@ -17,6 +17,7 @@ import { revalidatePath } from "next/cache";
 import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import Answer from "@/database/answer.model";
+import Interaction from "@/database/interaction.model";
 import { BadgeCriteriaType } from "@/types";
 import { assignBadges } from "../utils";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -101,9 +102,9 @@ export async function setupUsername(params: { clerkId: string; username: string 
 
     // Update the user's username and mark setup as complete
     const updatedUser = await User.findOneAndUpdate(
-      { clerkId },
-      { username, needsUsernameSetup: false },
-      { new: true }
+        { clerkId },
+        { username, needsUsernameSetup: false },
+        { new: true }
     );
 
     if (!updatedUser) {
@@ -164,20 +165,52 @@ export async function deleteUser(params: DeleteUserParams) {
     connectToDatabase();
     const { clerkId } = params;
 
-    const user = await User.findOneAndDelete({ clerkId });
+    const user = await User.findOne({ clerkId });
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    // delete user from db along w all questions, answers, comments, etc related to him
-    // const userQuestionIds = await Question.find({ author: user._id }).distinct(
-    //   "_id"
-    // );
-
+    // Delete all questions authored by this user
     await Question.deleteMany({ author: user._id });
 
+    // Delete all answers authored by this user
+    await Answer.deleteMany({ author: user._id });
+
+    // Remove user's votes from all questions
+    await Question.updateMany(
+        { upvotes: user._id },
+        { $pull: { upvotes: user._id } }
+    );
+    await Question.updateMany(
+        { downvotes: user._id },
+        { $pull: { downvotes: user._id } }
+    );
+
+    // Remove user's votes from all answers
+    await Answer.updateMany(
+        { upvotes: user._id },
+        { $pull: { upvotes: user._id } }
+    );
+    await Answer.updateMany(
+        { downvotes: user._id },
+        { $pull: { downvotes: user._id } }
+    );
+
+    // Remove user from saved questions of other users
+    await User.updateMany(
+        { saved: { $in: [user._id] } },
+        { $pull: { saved: user._id } }
+    );
+
+    // Delete all interactions by this user
+    await Interaction.deleteMany({ user: user._id });
+
+    // Finally delete the user
     const deletedUser = await User.findByIdAndDelete(user._id);
+
+    // Revalidate the community page to reflect the deletion
+    revalidatePath("/community");
 
     return deletedUser;
   } catch (error) {
@@ -222,9 +255,9 @@ export async function getAllUsers(params: GetAllUsersParams) {
     }
 
     const users = await User.find(query)
-      .skip(skipAmount)
-      .limit(pageSize)
-      .sort(sortOptions);
+        .skip(skipAmount)
+        .limit(pageSize)
+        .sort(sortOptions);
 
     const totalUsers = await User.countDocuments(query);
 
@@ -253,20 +286,20 @@ export async function toggleSaveQuestion(params: ToggleSaveQuestionParams) {
 
     if (isQuestionSaved) {
       await User.findByIdAndUpdate(
-        userId,
-        {
-          $pull: { saved: questionId },
-        },
-        { new: true }
+          userId,
+          {
+            $pull: { saved: questionId },
+          },
+          { new: true }
       );
     } else {
       // add to saved
       await User.findByIdAndUpdate(
-        userId,
-        {
-          $addToSet: { saved: questionId },
-        },
-        { new: true }
+          userId,
+          {
+            $addToSet: { saved: questionId },
+          },
+          { new: true }
       );
     }
     revalidatePath(path);
@@ -285,8 +318,8 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
     const skipAmount = (page - 1) * pageSize;
 
     const query: FilterQuery<typeof Question> = searchQuery
-      ? { title: { $regex: new RegExp(searchQuery, "i") } }
-      : {};
+        ? { title: { $regex: new RegExp(searchQuery, "i") } }
+        : {};
 
     let sortOptions = {};
 
@@ -398,8 +431,8 @@ export const getUserInfo = async (params: GetUserByIdParams) => {
       },
     ]);
 
-     // calculation badge criteria
-     const criteria = [
+    // calculation badge criteria
+    const criteria = [
       { type: 'QUESTION_COUNT' as BadgeCriteriaType, count: totalQuestions },
       { type: 'ANSWER_COUNT' as BadgeCriteriaType, count: totalAnswers },
       {
@@ -443,15 +476,15 @@ export const getUserQuestions = async (params: GetUserStatsParams) => {
     const totalQuestions = await Question.countDocuments({ author: userId });
 
     const userQuestions = await Question.find({ author: userId })
-      .skip(skipAmount)
-      .limit(pageSize)
-      .sort({
-        createdAt: -1,
-        views: -1,
-        upvotes: -1,
-      })
-      .populate("tags", "_id name")
-      .populate("author", "_id clerkId name picture");
+        .skip(skipAmount)
+        .limit(pageSize)
+        .sort({
+          createdAt: -1,
+          views: -1,
+          upvotes: -1,
+        })
+        .populate("tags", "_id name")
+        .populate("author", "_id clerkId name picture");
 
     const isNextQuestion = totalQuestions > skipAmount + userQuestions.length;
 
@@ -471,14 +504,14 @@ export const getUserAnswers = async (params: GetUserStatsParams) => {
 
     const totalAnswers = await Answer.countDocuments({ author: userId });
     const userAnswers = await Answer.find({ author: userId })
-      .skip(skipAmount)
-      .limit(pageSize)
-      .sort({
-        createdAt: -1,
-        upvotes: -1,
-      })
-      .populate("question", "_id title")
-      .populate("author", "_id clerkId name picture");
+        .skip(skipAmount)
+        .limit(pageSize)
+        .sort({
+          createdAt: -1,
+          upvotes: -1,
+        })
+        .populate("question", "_id title")
+        .populate("author", "_id clerkId name picture");
 
     const isNextAnswer = totalAnswers > skipAmount + userAnswers.length;
 
