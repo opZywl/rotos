@@ -42,12 +42,30 @@ export const getOrCreateUser = async (params: { userId: string }) => {
 
     const { userId } = params;
 
-    // Check if user exists in MongoDB
+    // Check if user exists in MongoDB by clerkId
     let user = await User.findOne({ clerkId: userId });
 
     if (!user) {
       // User doesn't exist, fetch from Clerk and create
       const clerkUser = await clerkClient.users.getUser(userId);
+      const email = clerkUser.emailAddresses[0]?.emailAddress || "";
+
+      // Check if a user with this email already exists (e.g., from a previous deleted account)
+      const existingUserByEmail = await User.findOne({ email });
+      if (existingUserByEmail) {
+        // Update the existing user with the new clerkId (re-registration case)
+        user = await User.findByIdAndUpdate(
+            existingUserByEmail._id,
+            {
+              clerkId: userId,
+              name: `${clerkUser.firstName || ""}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ""}`.trim() || "User",
+              picture: clerkUser.imageUrl,
+              needsUsernameSetup: true,
+            },
+            { new: true }
+        );
+        return user;
+      }
 
       // Generate unique username
       let username = clerkUser.username;
@@ -59,8 +77,8 @@ export const getOrCreateUser = async (params: { userId: string }) => {
       }
 
       // Check if username already exists and make it unique if needed
-      const existingUser = await User.findOne({ username });
-      if (existingUser) {
+      const existingUserByUsername = await User.findOne({ username });
+      if (existingUserByUsername) {
         const randomSuffix = Math.random().toString(36).substring(2, 8);
         username = `${username}_${randomSuffix}`;
       }
@@ -69,7 +87,7 @@ export const getOrCreateUser = async (params: { userId: string }) => {
         clerkId: userId,
         name: `${clerkUser.firstName || ""}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ""}`.trim() || "User",
         username,
-        email: clerkUser.emailAddresses[0]?.emailAddress || "",
+        email,
         picture: clerkUser.imageUrl,
         needsUsernameSetup: true,
       });
