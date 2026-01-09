@@ -231,12 +231,11 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
       ],
     });
 
-    const isNext = user.saved.length > pageSize;
-
     if (!user) {
-      throw new Error("User not found");
+      return { questions: [], isNext: false };
     }
 
+    const isNext = user.saved.length > pageSize;
     const savedQuestions = user.saved;
 
     return { questions: savedQuestions, isNext };
@@ -252,7 +251,7 @@ export const getUserInfo = async (params: GetUserByIdParams) => {
     const { userId } = params;
     const user = await User.findOne({ clerkId: userId });
     if (!user) {
-      throw new Error("User not found");
+      return null;
     }
 
     const totalQuestions = await Question.countDocuments({ author: user._id });

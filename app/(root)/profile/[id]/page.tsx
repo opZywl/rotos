@@ -11,6 +11,7 @@ import { auth, SignedIn, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Profile",
@@ -19,10 +20,13 @@ export const metadata: Metadata = {
 
 const ProfileDetails = async ({ params, searchParams }: URLProps) => {
   const { userId: clerkId } = auth();
-  const { user, totalQuestions, totalAnswers, reputation, badgeCounts } =
-    await getUserInfo({
-      userId: params.id,
-    });
+  const result = await getUserInfo({
+    userId: params.id,
+  });
+
+  if (!result) notFound();
+
+  const { user, totalQuestions, totalAnswers, reputation, badgeCounts } = result;
 
   return (
     <div className="w-full">
