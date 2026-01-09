@@ -189,6 +189,7 @@ const Votes = ({
               value={formatAndDivideNumber(answers)}
               title=""
               textStyles=" small-medium text-dark400_light800  "
+              href={type === "Question" ? `/question/${JSON.parse(itemId)}` : undefined}
             />
             <Metric
               imgUrl="/assets/icons/eye.svg"
