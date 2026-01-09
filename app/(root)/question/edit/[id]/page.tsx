@@ -1,9 +1,10 @@
 import Question from "@/components/forms/Question";
 import { getQuestionById } from "@/lib/actions/question.action";
-import { getUserById } from "@/lib/actions/user.action";
+import { getOrCreateUser } from "@/lib/actions/user.action";
 import { ParamsProps } from "@/types";
 import { auth } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Edit Question",
@@ -13,9 +14,9 @@ export const metadata: Metadata = {
 const EditQuestion = async ({ params }: ParamsProps) => {
   const { userId } = auth();
 
-  if (!userId) return null;
+  if (!userId) redirect("/sign-in");
 
-  const mongoUser = await getUserById({ userId });
+  const mongoUser = await getOrCreateUser({ userId });
 
   const question = await getQuestionById({
     questionId: params.id,

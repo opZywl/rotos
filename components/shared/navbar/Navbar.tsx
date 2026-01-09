@@ -5,7 +5,7 @@ import React from "react";
 import Theme from "./Theme";
 import MobileNav from "./MobileNav";
 import GlobalSearch from "../search/GlobalSearch";
-import { getUserById } from "@/lib/actions/user.action";
+import { getOrCreateUser } from "@/lib/actions/user.action";
 import { getAllTags } from "@/lib/actions/tag.actions";
 
 const Navbar = async () => {
@@ -13,7 +13,7 @@ const Navbar = async () => {
 
   const allTags = await getAllTags({});
 
-  const result = await getUserById({ userId });
+  const result = userId ? await getOrCreateUser({ userId }) : null;
   const user = {
     name: result?.name,
     username: result?.username,

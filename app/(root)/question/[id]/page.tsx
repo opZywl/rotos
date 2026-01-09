@@ -4,7 +4,7 @@ import ParseHTML from "@/components/shared/ParseHTML";
 import RenderTag from "@/components/shared/RenderTag";
 import Votes from "@/components/shared/Votes";
 import { getQuestionById } from "@/lib/actions/question.action";
-import { getUserById } from "@/lib/actions/user.action";
+import { getOrCreateUser } from "@/lib/actions/user.action";
 import { getTimestamp } from "@/lib/utils";
 import { auth, SignedIn, SignedOut } from "@clerk/nextjs";
 import Image from "next/image";
@@ -31,8 +31,8 @@ const page = async ({ params, searchParams }: QuestionDetailsProps) => {
   const { userId: clerkId } = auth(); // user from clerkdb
   let mongoUser: any;
   if (clerkId) {
-    mongoUser = await getUserById({ userId: clerkId });
-    // gets user from mongodb
+    mongoUser = await getOrCreateUser({ userId: clerkId });
+    // gets user from mongodb (creates if not exists)
   }
 
   return (
