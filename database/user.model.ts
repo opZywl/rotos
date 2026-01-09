@@ -13,7 +13,7 @@ export interface IUser extends Document{
     reputation?:  number;
     saved: Schema.Types.ObjectId[];
     joinedAt: Date;
-
+    needsUsernameSetup?: boolean;
 }
 
 const UserSchema = new Schema({
@@ -28,7 +28,8 @@ const UserSchema = new Schema({
     portfolioWebsite: { type: String},
     reputation: { type: Number, default: 0},
     saved: [{ type: Schema.Types.ObjectId, ref: 'Question'}],
-    joinedAt: { type: Date, default: Date.now}
+    joinedAt: { type: Date, default: Date.now},
+    needsUsernameSetup: { type: Boolean, default: false}
 })
 
 const User = models.User || model("User", UserSchema)
