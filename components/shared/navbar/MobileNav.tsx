@@ -8,11 +8,14 @@ import {
 } from "@/components/ui/sheet";
 import Image from "next/image";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignOutButton, useAuth } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, SignOutButton, useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { mobileSidebarLinks } from "@/constants";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+
+// Routes that require authentication
+const protectedRoutes = ["/collection", "/ask-question"];
 
 interface UserParams {
   user?: {
@@ -25,39 +28,54 @@ interface UserParams {
 
 const NavContent = () => {
   const pathname = usePathname();
+  const { userId } = useAuth();
 
   return (
     <section className="light-border mt-5 flex flex-col gap-3 border-t pt-4">
       <h2 className="text-dark300_light900 base-bold">Discover</h2>
       {mobileSidebarLinks.map((item) => {
-        // takes array from sideBarLinks and creats a Link for each object in array for the sidebar
-
         const isActive =
           (pathname.includes(item.route) && item.route.length > 1) ||
           pathname === item.route;
-        // to set a link to Active. It is true when the path name includes value of item route AND when value of route must have some data
+
+        const isProtected = protectedRoutes.includes(item.route);
+        const needsAuth = isProtected && !userId;
+
+        const linkContent = (
+          <>
+            <Image
+              src={item.imgURL}
+              width={30}
+              height={30}
+              alt={item.label}
+              className={`${isActive ? "dark:invert" : "invert-colors"}`}
+            />
+            <p className={`${isActive ? "base-bold" : "base-medium"}`}>
+              {item.label}
+            </p>
+          </>
+        );
+
+        const linkClasses = `${
+          isActive
+            ? "primary-gradient text-light900_dark100 rounded-lg "
+            : "text-dark300_light900"
+        } flex items-center justify-start gap-4 bg-transparent px-4 py-1.5 cursor-pointer`;
+
+        if (needsAuth) {
+          return (
+            <SignInButton key={item.route} mode="modal">
+              <div className={linkClasses}>
+                {linkContent}
+              </div>
+            </SignInButton>
+          );
+        }
 
         return (
           <SheetClose asChild key={item.route}>
-            <Link
-              href={item.route}
-              className={`${
-                isActive
-                  ? "primary-gradient text-light900_dark100 rounded-lg "
-                  : "text-dark300_light900"
-              } flex items-center justify-start gap-4 bg-transparent px-4 py-1.5`}
-            >
-              {/* checks if the link is active using isActive if yes apply needed classes */}
-              <Image
-                src={item.imgURL}
-                width={30}
-                height={30}
-                alt={item.label}
-                className={`${isActive ? "dark:invert" : "invert-colors"}`}
-              />
-              <p className={`${isActive ? "base-bold" : "base-medium"}`}>
-                {item.label}
-              </p>
+            <Link href={item.route} className={linkClasses}>
+              {linkContent}
             </Link>
           </SheetClose>
         );
