@@ -86,8 +86,8 @@ const Question = ({ type, mongoUserId, questionData }: Props) => {
   }
 
   const handleInputKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    field: any
+      e: React.KeyboardEvent<HTMLInputElement>,
+      field: any
   ) => {
     if (e.key === "Enter" && field.name === "tags") {
       e.preventDefault();
@@ -175,7 +175,7 @@ const Question = ({ type, mongoUserId, questionData }: Props) => {
       }
 
       const mergedTags = Array.from(
-        new Set([...form.getValues("tags"), ...suggestedTags])
+          new Set([...form.getValues("tags"), ...suggestedTags])
       ).slice(0, 3);
 
       form.setValue("tags", mergedTags, { shouldValidate: true });
@@ -194,206 +194,219 @@ const Question = ({ type, mongoUserId, questionData }: Props) => {
   };
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex w-full flex-col gap-10"
-      >
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem className="flex w-full flex-col">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <FormLabel className="paragraph-semibold text-dark400_light800">
-                  Question Title <span className="text-red-600">*</span>
-                </FormLabel>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleImproveTitle}
-                  disabled={isImprovingTitle}
-                >
-                  {isImprovingTitle ? (
-                    <>
-                      <Loader className="mr-2 size-4 animate-spin" />
-                      Improving...
-                    </>
-                  ) : (
-                    "Melhorar título"
-                  )}
-                </Button>
-              </div>
-              <FormControl className="mt-3.5">
-                <Input
-                  className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription className="body-regular text-dark100_light900 mt-2.5">
-                Be specific and ask the question as if you&apos;re asking it to
-                another person
-              </FormDescription>
-              <FormMessage className="text-red-600" />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="explanation"
-          render={({ field }) => (
-            <FormItem className="flex w-full flex-col gap-3">
-              <FormLabel className="paragraph-semibold text-dark400_light800">
-                Detailed explanation of your problem{" "}
-                <span className="text-red-600">*</span>
-              </FormLabel>
-              <FormControl className="mt-3.5">
-                <Editor
-                  apiKey={process.env.NEXT_PUBLIC_TINY_EDITOR_API_KEY}
-                  onInit={(_evt, editor) =>
-                    // @ts-ignore
-                    (editorRef.current = editor)
-                  }
-                  onBlur={field.onBlur}
-                  // ⬆️⬆️ function tht runs when u exit the editor
-                  onEditorChange={(content) => field.onChange(content)}
-                  initialValue={questionDetails?.content || ""}
-                  init={{
-                    height: 350,
-                    menubar: false,
-                    plugins: [
-                      "advlist",
-                      "autolink",
-                      "lists",
-                      "link",
-                      "image",
-                      "charmap",
-                      "preview",
-                      "anchor",
-                      "searchreplace",
-                      "visualblocks",
-                      "codesample",
-                      "fullscreen",
-                      "insertdatetime",
-                      "media",
-                      "table",
-                      "code",
-                    ],
-                    toolbar:
-                      "undo redo | blocks | " +
-                      "codesample | bold italic forecolor | alignleft aligncenter " +
-                      "alignright alignjustify | bullist numlist | ",
-                    content_style: "body { font-family:Inter; font-size:16px }",
-                    skin: "oxide",
-                    content_css: "light",
-                  }}
-                />
-              </FormControl>
-              <FormDescription className="body-regular text-dark400_light800 mt-2.5">
-                Include as many details as possible. The more you tell us, the
-                easier it will be for
-              </FormDescription>
-              <FormMessage className="text-red-500" />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="tags"
-          render={({ field }) => (
-            <FormItem className="flex w-full flex-col">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <FormLabel className="paragraph-semibold text-dark400_light800">
-                  Tags <span className="text-red-600">*</span>
-                </FormLabel>
-                {type !== "Edit" && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSuggestTags}
-                    disabled={isSuggestingTags}
-                  >
-                    {isSuggestingTags ? (
-                      <>
-                        <Loader className="mr-2 size-4 animate-spin" />
-                        Suggesting...
-                      </>
-                    ) : (
-                      "Sugerir tags"
-                    )}
-                  </Button>
-                )}
-              </div>
-              <FormControl className="mt-3.5">
-                <>
-                  <Input
-                    disabled={type === "Edit"}
-                    placeholder="Add tags..."
-                    className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
-                    onKeyDown={(e) => handleInputKeyDown(e, field)}
-                  />
-                  {field.value.length > 0 && (
-                    <div className="flex-start mt-2.5 gap-2.5 ">
-                      {field.value.map((tag: any) => (
-                        <Badge
-                          key={tag}
-                          className="subtle-medium primary-gradient  text-light400_light500 text-light900_dark100 flex items-center justify-center gap-2 rounded-md border-none p-2 capitalize"
-                          onClick={() =>
-                            type !== "Edit"
-                              ? handleTagRemove(tag, field)
-                              : () => {}
-                          }
-                        >
-                          {tag}
-                          {type !== "Edit" && (
-                            <Image
-                              src="/assets/icons/close.svg"
-                              alt="close"
-                              className="cursor-pointer object-contain invert dark:invert-0"
-                              width={12}
-                              height={12}
-                            />
-                          )}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </>
-              </FormControl>
-              <FormDescription className="body-regular text-dark100_light900 mt-2.5">
-                Add tags to help others find your question. Press Enter atfer typing each tag.
-              </FormDescription>
-              <FormMessage className="text-red-500" />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="submit"
-          className="primary-gradient text-light900_dark100 w-fit "
-          disabled={isSubmitting}
+      <Form {...form}>
+        <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex w-full flex-col gap-10"
         >
-          {isSubmitting ? (
-            <>
-              {type === "Edit" ? (
-                <>
-                  <Loader className="text-light900_dark100 my-2 size-4 animate-spin" />
-                  Editing...
-                </>
-              ) : (
-                <>
-                  <Loader className="text-light900_dark100 my-2 size-4 animate-spin" />
-                  Posting...
-                </>
+          <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                  <FormItem className="flex w-full flex-col">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <FormLabel className="paragraph-semibold text-dark400_light800">
+                        Question Title <span className="text-red-600">*</span>
+                      </FormLabel>
+                      <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleImproveTitle}
+                          disabled={isImprovingTitle}
+                      >
+                        {isImprovingTitle ? (
+                            <>
+                              <Loader className="mr-2 size-4 animate-spin" />
+                              Improving...
+                            </>
+                        ) : (
+                            "Melhorar título"
+                        )}
+                      </Button>
+                    </div>
+                    <FormControl className="mt-3.5">
+                      <Input
+                          className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
+                          {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className="body-regular text-dark100_light900 mt-2.5">
+                      Be specific and ask the question as if you&apos;re asking it to
+                      another person
+                    </FormDescription>
+                    <FormMessage className="text-red-600" />
+                  </FormItem>
               )}
-            </>
-          ) : (
-            <>{type === "Edit" ? "Edit question" : "Post question"}</>
-          )}
-        </Button>
-      </form>
-    </Form>
+          />
+          <FormField
+              control={form.control}
+              name="explanation"
+              render={({ field }) => (
+                  <FormItem className="flex w-full flex-col gap-3">
+                    <FormLabel className="paragraph-semibold text-dark400_light800">
+                      Detailed explanation of your problem{" "}
+                      <span className="text-red-600">*</span>
+                    </FormLabel>
+                    <FormControl className="mt-3.5">
+                      <Editor
+                          apiKey={process.env.NEXT_PUBLIC_TINY_EDITOR_API_KEY}
+                          onInit={(_evt, editor) =>
+                              // @ts-ignore
+                              (editorRef.current = editor)
+                          }
+                          onBlur={field.onBlur}
+                          // ⬆️⬆️ function tht runs when u exit the editor
+                          onEditorChange={(content) => field.onChange(content)}
+                          initialValue={questionDetails?.content || ""}
+                          init={{
+                            height: 350,
+                            menubar: false,
+                            plugins: [
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "image",
+                              "charmap",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "codesample",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "code",
+                            ],
+                            toolbar:
+                                "undo redo | blocks | " +
+                                "codesample | bold italic forecolor | alignleft aligncenter " +
+                                "alignright alignjustify | bullist numlist | image",
+                            content_style: "body { font-family:Inter; font-size:16px }",
+                            skin: "oxide",
+                            content_css: "light",
+                            // Image upload settings - convert to base64
+                            paste_data_images: true,
+                            automatic_uploads: true,
+                            file_picker_types: "image",
+                            images_upload_handler: (blobInfo: any) => {
+                              return new Promise((resolve) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  resolve(reader.result as string);
+                                };
+                                reader.readAsDataURL(blobInfo.blob());
+                              });
+                            },
+                          }}
+                      />
+                    </FormControl>
+                    <FormDescription className="body-regular text-dark400_light800 mt-2.5">
+                      Include as many details as possible. The more you tell us, the
+                      easier it will be for
+                    </FormDescription>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+              )}
+          />
+          <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                  <FormItem className="flex w-full flex-col">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <FormLabel className="paragraph-semibold text-dark400_light800">
+                        Tags <span className="text-red-600">*</span>
+                      </FormLabel>
+                      {type !== "Edit" && (
+                          <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleSuggestTags}
+                              disabled={isSuggestingTags}
+                          >
+                            {isSuggestingTags ? (
+                                <>
+                                  <Loader className="mr-2 size-4 animate-spin" />
+                                  Suggesting...
+                                </>
+                            ) : (
+                                "Sugerir tags"
+                            )}
+                          </Button>
+                      )}
+                    </div>
+                    <FormControl className="mt-3.5">
+                      <>
+                        <Input
+                            disabled={type === "Edit"}
+                            placeholder="Add tags..."
+                            className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
+                            onKeyDown={(e) => handleInputKeyDown(e, field)}
+                        />
+                        {field.value.length > 0 && (
+                            <div className="flex-start mt-2.5 gap-2.5 ">
+                              {field.value.map((tag: any) => (
+                                  <Badge
+                                      key={tag}
+                                      className="subtle-medium primary-gradient  text-light400_light500 text-light900_dark100 flex items-center justify-center gap-2 rounded-md border-none p-2 capitalize"
+                                      onClick={() =>
+                                          type !== "Edit"
+                                              ? handleTagRemove(tag, field)
+                                              : () => {}
+                                      }
+                                  >
+                                    {tag}
+                                    {type !== "Edit" && (
+                                        <Image
+                                            src="/assets/icons/close.svg"
+                                            alt="close"
+                                            className="cursor-pointer object-contain invert dark:invert-0"
+                                            width={12}
+                                            height={12}
+                                        />
+                                    )}
+                                  </Badge>
+                              ))}
+                            </div>
+                        )}
+                      </>
+                    </FormControl>
+                    <FormDescription className="body-regular text-dark100_light900 mt-2.5">
+                      Add tags to help others find your question. Press Enter atfer typing each tag.
+                    </FormDescription>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+              )}
+          />
+          <Button
+              type="submit"
+              className="primary-gradient text-light900_dark100 w-fit "
+              disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+                <>
+                  {type === "Edit" ? (
+                      <>
+                        <Loader className="text-light900_dark100 my-2 size-4 animate-spin" />
+                        Editing...
+                      </>
+                  ) : (
+                      <>
+                        <Loader className="text-light900_dark100 my-2 size-4 animate-spin" />
+                        Posting...
+                      </>
+                  )}
+                </>
+            ) : (
+                <>{type === "Edit" ? "Edit question" : "Post question"}</>
+            )}
+          </Button>
+        </form>
+      </Form>
   );
 };
 
