@@ -16,6 +16,9 @@ const Page = async () => {
   if (!userId) redirect("/sign-in");
 
   const mongoUser = await getUserById({ userId });
+
+  if (!mongoUser) redirect("/sign-in");
+
   return (
     <div className="mt-10 px-6 sm:px-12">
       <h1 className="h1-bold text-dark100_light900 ">Ask a question</h1>
