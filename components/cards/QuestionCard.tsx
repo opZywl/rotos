@@ -6,7 +6,7 @@ import { auth, SignedIn } from "@clerk/nextjs";
 import EditDeleteAction from "../shared/EditDeleteAction";
 import Image from "next/image";
 import Votes from "../shared/Votes";
-import { getUserById } from "@/lib/actions/user.action";
+import { getOrCreateUser } from "@/lib/actions/user.action";
 
 interface QuestionProps {
   _id: string;
@@ -47,8 +47,8 @@ const QuestionCard = async (props: QuestionProps) => {
   const { userId } = auth(); // user from clerkdb
   let mongoUser;
   if (userId) {
-    mongoUser = await getUserById({ userId });
-    // gets user from mongodb
+    mongoUser = await getOrCreateUser({ userId });
+    // gets user from mongodb (creates if not exists)
   }
 
   return (

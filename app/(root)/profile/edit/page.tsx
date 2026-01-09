@@ -1,8 +1,9 @@
 import Profile from "@/components/forms/Profile";
-import { getUserById } from "@/lib/actions/user.action";
+import { getOrCreateUser } from "@/lib/actions/user.action";
 import { ParamsProps } from "@/types";
 import { auth } from "@clerk/nextjs";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Edit profile",
@@ -11,9 +12,9 @@ export const metadata: Metadata = {
 
 const ProfileEdit = async ({ params }: ParamsProps) => {
   const { userId } = auth();
-  if (!userId) return null;
+  if (!userId) redirect("/sign-in");
 
-  const mongoUser = await getUserById({ userId });
+  const mongoUser = await getOrCreateUser({ userId });
 
   return (
     <div className="mt-10 px-6 sm:px-24">

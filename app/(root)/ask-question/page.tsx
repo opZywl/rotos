@@ -1,5 +1,5 @@
 import Question from "@/components/forms/Question";
-import { getUserById } from "@/lib/actions/user.action";
+import { getOrCreateUser } from "@/lib/actions/user.action";
 import { auth } from "@clerk/nextjs";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -15,9 +15,7 @@ const Page = async () => {
 
   if (!userId) redirect("/sign-in");
 
-  const mongoUser = await getUserById({ userId });
-
-  if (!mongoUser) redirect("/sign-in");
+  const mongoUser = await getOrCreateUser({ userId });
 
   return (
     <div className="mt-10 px-6 sm:px-12">

@@ -19,6 +19,7 @@ import Tag from "@/database/tag.model";
 import Answer from "@/database/answer.model";
 import { BadgeCriteriaType } from "@/types";
 import { assignBadges } from "../utils";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export const getUserById = async (params: any) => {
   try {
@@ -27,6 +28,35 @@ export const getUserById = async (params: any) => {
     const { userId } = params;
 
     const user = await User.findOne({ clerkId: userId });
+    return user;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const getOrCreateUser = async (params: { userId: string }) => {
+  try {
+    await connectToDatabase();
+
+    const { userId } = params;
+
+    // Check if user exists in MongoDB
+    let user = await User.findOne({ clerkId: userId });
+
+    if (!user) {
+      // User doesn't exist, fetch from Clerk and create
+      const clerkUser = await clerkClient.users.getUser(userId);
+
+      user = await User.create({
+        clerkId: userId,
+        name: `${clerkUser.firstName || ""}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ""}`.trim() || "User",
+        username: clerkUser.username || `user_${userId.slice(-8)}`,
+        email: clerkUser.emailAddresses[0]?.emailAddress || "",
+        picture: clerkUser.imageUrl,
+      });
+    }
+
     return user;
   } catch (error) {
     console.log(error);
