@@ -14,6 +14,9 @@ import {
 } from "@clerk/nextjs";
 import { Button } from "../ui/button";
 
+// Routes that require authentication
+const protectedRoutes = ["/collection", "/ask-question"];
+
 const LeftSideBar = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -64,17 +67,12 @@ const LeftSideBar = () => {
             }
           }
 
-          return (
-            <Link
-              key={item.route}
-              href={item.route}
-              className={`${
-                isActive
-                  ? " primary-gradient rounded-lg text-light-1 dark:text-dark-1"
-                  : "text-dark300_light900"
-              } flex items-center justify-start gap-2 bg-transparent px-4 py-3`}
-            >
-              {/* checks if the link is active using isActive if yes apply needed classes */}
+          // Check if this is a protected route and user is not logged in
+          const isProtected = protectedRoutes.includes(item.route);
+          const needsAuth = isProtected && !userId;
+
+          const linkContent = (
+            <>
               <Image
                 src={item.imgURL}
                 width={30}
@@ -87,6 +85,33 @@ const LeftSideBar = () => {
               >
                 {item.label}
               </p>
+            </>
+          );
+
+          const linkClasses = `${
+            isActive
+              ? " primary-gradient rounded-lg text-light-1 dark:text-dark-1"
+              : "text-dark300_light900"
+          } flex items-center justify-start gap-2 bg-transparent px-4 py-3 cursor-pointer`;
+
+          // If user needs to sign in, wrap in SignInButton
+          if (needsAuth) {
+            return (
+              <SignInButton key={item.route} mode="modal">
+                <div className={linkClasses}>
+                  {linkContent}
+                </div>
+              </SignInButton>
+            );
+          }
+
+          return (
+            <Link
+              key={item.route}
+              href={item.route}
+              className={linkClasses}
+            >
+              {linkContent}
             </Link>
           );
         })}
