@@ -3,7 +3,7 @@
 import { formatAndDivideNumber } from "@/lib/utils";
 import Image from "next/image";
 import { useToast } from "../ui/use-toast";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   downvoteQuestion,
   upvoteQuestion,
@@ -28,23 +28,37 @@ interface Props {
 }
 
 const Votes = ({
-  type,
-  itemId,
-  userId,
-  answers,
-  views,
-  upvotes,
-  downvotes,
-  hasupVoted,
-  hasdownVoted,
-  hasSaved,
-  isAnswer,
-}: Props) => {
+                 type,
+                 itemId,
+                 userId,
+                 answers,
+                 views,
+                 upvotes,
+                 downvotes,
+                 hasupVoted,
+                 hasdownVoted,
+                 hasSaved,
+                 isAnswer,
+               }: Props) => {
   const { toast } = useToast();
   const pathname = usePathname();
+  const router = useRouter();
 
   const totalVotes = +formatAndDivideNumber(upvotes - downvotes);
   const allVotes = +formatAndDivideNumber(upvotes + downvotes);
+
+  const handleViewAnswers = () => {
+    if (!userId) {
+      return toast({
+        icon: <X className="text-red" />,
+        title: "Login to see answers",
+      });
+    }
+    // Navigate to question page if logged in
+    if (type === "Question") {
+      router.push(`/question/${JSON.parse(itemId)}`);
+    }
+  };
 
   const handleSave = async () => {
     if (userId) {
@@ -56,9 +70,9 @@ const Votes = ({
 
       return toast({
         icon: !hasSaved ? (
-          <Check className="text-green" />
+            <Check className="text-green" />
         ) : (
-          <X className="text-red" />
+            <X className="text-red" />
         ),
         title: `${!hasSaved ? "Saved" : "Unsaved"}`,
       });
@@ -99,9 +113,9 @@ const Votes = ({
 
       return toast({
         icon: !hasupVoted ? (
-          <Check className="text-green" />
+            <Check className="text-green" />
         ) : (
-          <X className="text-red" />
+            <X className="text-red" />
         ),
         title: ` ${!hasupVoted ? "Upvoted" : "Vote removed"}`,
       });
@@ -129,9 +143,9 @@ const Votes = ({
       // show a toast
       return toast({
         icon: !hasdownVoted ? (
-          <Check className="text-green" />
+            <Check className="text-green" />
         ) : (
-          <X className="text-red" />
+            <X className="text-red" />
         ),
         title: `${!hasdownVoted ? "Downvoted" : "Vote removed"}`,
       });
@@ -139,84 +153,84 @@ const Votes = ({
   };
 
   return (
-    <div className="flex w-full gap-5">
-      <div className="flex w-full gap-2.5 md:gap-2">
-        <div className="flex-center light-border-2 gap-1 rounded-md border p-1 px-2 md:px-3">
-          <Image
-            src={
-              hasupVoted
-                ? "/assets/icons/upvoted.svg"
-                : "/assets/icons/upvote.svg"
-            }
-            width={22}
-            height={22}
-            className={`cursor-pointer ${!hasupVoted && "invert dark:invert-0"}`}
-            alt="upvote"
-            onClick={() => handleVote("upvote")}
-          />
-          <div className="flex-center min-w-[18px] rounded-sm">
-            <p
-              className={`${totalVotes > 0 ? "text-[#08f71c]" : "text-red"}  text-[13px] font-semibold ${totalVotes === 0 && "text-dark400_light900"}`}
-            >
-              {totalVotes}
-            </p>
-          </div>
-          <Image
-            src={
-              hasdownVoted
-                ? "/assets/icons/downvoted.svg"
-                : "/assets/icons/downvote.svg"
-            }
-            width={22}
-            height={22}
-            className={`cursor-pointer ${!hasdownVoted && "invert dark:invert-0"}`}
-            alt="downvote"
-            onClick={() => handleVote("downvote")}
-          />
-        </div>
-        {!isAnswer && (
-          <div className="flex w-max  items-center gap-2.5 max-sm:justify-start md:gap-2">
-            <Metric
-              imgUrl="/assets/icons/like.svg"
-              alt="upvotes"
-              value={formatAndDivideNumber(allVotes)}
-              title=""
-              textStyles=" small-medium text-dark400_light800  "
+      <div className="flex w-full gap-5">
+        <div className="flex w-full gap-2.5 md:gap-2">
+          <div className="flex-center light-border-2 gap-1 rounded-md border p-1 px-2 md:px-3">
+            <Image
+                src={
+                  hasupVoted
+                      ? "/assets/icons/upvoted.svg"
+                      : "/assets/icons/upvote.svg"
+                }
+                width={22}
+                height={22}
+                className={`cursor-pointer ${!hasupVoted && "invert dark:invert-0"}`}
+                alt="upvote"
+                onClick={() => handleVote("upvote")}
             />
-            <Metric
-              imgUrl="/assets/icons/message.svg"
-              alt="answers"
-              value={formatAndDivideNumber(answers)}
-              title=""
-              textStyles=" small-medium text-dark400_light800  "
-              href={type === "Question" ? `/question/${JSON.parse(itemId)}` : undefined}
-            />
-            <Metric
-              imgUrl="/assets/icons/eye.svg"
-              alt="eye"
-              value={formatAndDivideNumber(views)}
-              title=""
-              textStyles=" small-medium text-dark400_light800  "
+            <div className="flex-center min-w-[18px] rounded-sm">
+              <p
+                  className={`${totalVotes > 0 ? "text-[#08f71c]" : "text-red"}  text-[13px] font-semibold ${totalVotes === 0 && "text-dark400_light900"}`}
+              >
+                {totalVotes}
+              </p>
+            </div>
+            <Image
+                src={
+                  hasdownVoted
+                      ? "/assets/icons/downvoted.svg"
+                      : "/assets/icons/downvote.svg"
+                }
+                width={22}
+                height={22}
+                className={`cursor-pointer ${!hasdownVoted && "invert dark:invert-0"}`}
+                alt="downvote"
+                onClick={() => handleVote("downvote")}
             />
           </div>
-        )}
+          {!isAnswer && (
+              <div className="flex w-max  items-center gap-2.5 max-sm:justify-start md:gap-2">
+                <Metric
+                    imgUrl="/assets/icons/like.svg"
+                    alt="upvotes"
+                    value={formatAndDivideNumber(allVotes)}
+                    title=""
+                    textStyles=" small-medium text-dark400_light800  "
+                />
+                <Metric
+                    imgUrl="/assets/icons/message.svg"
+                    alt="answers"
+                    value={formatAndDivideNumber(answers)}
+                    title=""
+                    textStyles=" small-medium text-dark400_light800  "
+                    onClick={type === "Question" ? handleViewAnswers : undefined}
+                />
+                <Metric
+                    imgUrl="/assets/icons/eye.svg"
+                    alt="eye"
+                    value={formatAndDivideNumber(views)}
+                    title=""
+                    textStyles=" small-medium text-dark400_light800  "
+                />
+              </div>
+          )}
 
-        {type === "Question" && (
-          <Image
-            src={
-              hasSaved
-                ? "/assets/icons/star-filled.svg"
-                : "/assets/icons/star-red.svg"
-            }
-            width={22}
-            height={22}
-            className={`cursor-pointer ${!hasSaved && "invert dark:invert-0"}`}
-            alt="star"
-            onClick={handleSave}
-          />
-        )}
+          {type === "Question" && (
+              <Image
+                  src={
+                    hasSaved
+                        ? "/assets/icons/star-filled.svg"
+                        : "/assets/icons/star-red.svg"
+                  }
+                  width={22}
+                  height={22}
+                  className={`cursor-pointer ${!hasSaved && "invert dark:invert-0"}`}
+                  alt="star"
+                  onClick={handleSave}
+              />
+          )}
+        </div>
       </div>
-    </div>
   );
 };
 
