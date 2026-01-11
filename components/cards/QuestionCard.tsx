@@ -7,6 +7,7 @@ import EditDeleteAction from "../shared/EditDeleteAction";
 import Image from "next/image";
 import Votes from "../shared/Votes";
 import { getOrCreateUser } from "@/lib/actions/user.action";
+import UserDisplay from "../shared/UserDisplay";
 
 interface QuestionProps {
   _id: string;
@@ -20,6 +21,7 @@ interface QuestionProps {
     clerkId: string;
     name: string;
     picture: string;
+    role: string;
   };
   upvotes: any[];
   downvotes: any[];
@@ -69,7 +71,11 @@ const QuestionCard = async (props: QuestionProps) => {
                 className="object-cover w-full h-full"
               />
             </div>
-            <p className="text-dark100_light900">{author.name}</p>
+            <UserDisplay 
+              name={author.name} 
+              role={author.role} 
+              className="text-dark100_light900"
+            />
           </Link>
 
           <span className="subtle-regular text-dark400_light700 mt-2 line-clamp-1 flex">

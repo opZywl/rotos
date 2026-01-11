@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import GlobalFilters from "./GlobalFilters";
 import { globalSearch } from "@/lib/actions/general.action";
 import { ChevronRightIcon, Loader } from "lucide-react";
+import UserDisplay from "../UserDisplay";
 
 const GlobalResult = () => {
   const searchParams = useSearchParams();
@@ -90,7 +91,11 @@ const GlobalResult = () => {
                   <ChevronRightIcon className="dark:invert max-sm:min-w-5" />
                   <div className="flex flex-col">
                     <p className="body-medium text-dark200_light800 line-clamp-1">
-                      {item.title}
+                      {item.type === 'user' ? (
+                        <UserDisplay name={item.title} role={item.role} />
+                      ) : (
+                        item.title
+                      )}
                     </p>
                     <p className="text-dark200_light800 small-medium mt-1 font-bold capitalize">
                       {item.type}

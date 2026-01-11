@@ -18,6 +18,7 @@ const Navbar = async () => {
     name: result?.name,
     username: result?.username,
     picture: result?.picture,
+    role: result?.role,
   };
 
   return (

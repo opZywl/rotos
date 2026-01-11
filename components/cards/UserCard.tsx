@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
+import UserDisplay from "../shared/UserDisplay";
 
 interface Props {
   user: {
@@ -12,6 +13,7 @@ interface Props {
     name: string;
     username: string;
     picture: string;
+    role: string;
   };
 }
 
@@ -29,11 +31,13 @@ const UserCard = ({ user }: Props) => {
           height={100}
         />
       </div>
-      <div className="mt-4 text-center">
-        <h3 className="h3-bold text-dark200_light900 line-clamp-1">
-          {user.name}
-        </h3>
-        <p className="body-regular text-variant">@{user.username}</p>
+      <div className="mt-4 text-center px-4">
+        <UserDisplay 
+          name={user.name} 
+          role={user.role} 
+          className="h3-bold text-dark200_light900 line-clamp-1"
+        />
+        <p className="body-regular text-variant mt-1">@{user.username}</p>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { SignedIn, auth } from "@clerk/nextjs";
 import EditDeleteAction from "../shared/EditDeleteAction";
 import Image from "next/image";
 import { getOrCreateUser } from "@/lib/actions/user.action";
+import UserDisplay from "../shared/UserDisplay";
 
 interface Props {
   clerkId?: string | null;
@@ -19,6 +20,7 @@ interface Props {
     clerkId: string;
     name: string;
     picture: string;
+    role: string;
   };
   upvotes: number;
   downvotes: number;
@@ -60,7 +62,11 @@ const AnswerCard = async ({
               className="size-full object-cover"
             />
           </div>
-          <p className="text-dark100_light900">{author.name}</p>
+          <UserDisplay 
+            name={author.name} 
+            role={author.role} 
+            className="text-dark100_light900"
+          />
         </Link>
 
         <div className="flex-center gap-3">

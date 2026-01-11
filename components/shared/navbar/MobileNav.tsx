@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { mobileSidebarLinks } from "@/constants";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import UserDisplay from "../UserDisplay";
 
 // Routes that require authentication
 const protectedRoutes = ["/collection", "/ask-question"];
@@ -22,6 +23,7 @@ interface UserParams {
     name?: string;
     username?: string;
     picture?: any;
+    role?: string;
   };
   popularTags?: string | undefined;
 }
@@ -134,7 +136,7 @@ const MobileNav = ({ user, popularTags }: UserParams) => {
                   />
                 </div>
                 <div className="text-dark100_light900 flex flex-col">
-                  <p className="base-bold">{user?.name}</p>
+                  <UserDisplay name={user?.name || ""} role={user?.role} className="base-bold" />
                   <p className="dark:text-zinc-600">@{user?.username}</p>
                 </div>
               </div>

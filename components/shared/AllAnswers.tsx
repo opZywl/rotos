@@ -9,6 +9,7 @@ import ParseHTML from "./ParseHTML";
 import Votes from "./Votes";
 import Pagination from "./Pagination";
 import EditDeleteAction from "./EditDeleteAction";
+import UserDisplay from "./UserDisplay";
 
 interface Props {
   questionId: string;
@@ -69,9 +70,11 @@ const AllAnswers = async ({
                   />
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center">
-                  <p className="body-semibold text-dark300_light700">
-                    {answer.author.name}
-                  </p>
+                  <UserDisplay 
+                    name={answer.author.name} 
+                    role={answer.author.role} 
+                    className="body-semibold text-dark300_light700"
+                  />
                   <p className="small-regular text-light400_light500 mt-0.5 line-clamp-1">
                     <span className="mx-2 max-sm:hidden">
                       {" "}
