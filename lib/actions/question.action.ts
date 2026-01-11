@@ -59,7 +59,7 @@ export async function getQuestions(params: GetQuestionsParams) {
 
     const questions = await Question.find(query)
       .populate({ path: "tags", model: Tag }) // if a question has tags attached to it we want to populate all the tags to display
-      .populate({ path: "author", model: User })
+      .populate({ path: "author", model: User, select: "_id clerkId name picture role" })
       .skip(skipAmount)
       .limit(pageSize)
       .sort(sortOptions);
@@ -139,7 +139,7 @@ export async function getQuestionById(params: GetQuestionByIdParams) {
       .populate({
         path: "author",
         model: User,
-        select: "_id clerkId name picture",
+        select: "_id clerkId name picture role",
       });
 
     return question;
@@ -385,6 +385,7 @@ export async function getRecommendedQuestions(params: RecommendedParams) {
       .populate({
         path: "author",
         model: User,
+        select: "_id clerkId name picture role",
       })
       .skip(skipAmount)
       .limit(pageSize);

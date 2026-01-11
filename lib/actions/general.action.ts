@@ -68,7 +68,8 @@ export const globalSearch = async (params: SearchParams) => {
                 ? item.clerkId
                 : type === 'answer'
                 ? item.questions
-                : item._id
+                : item._id,
+            role: type === 'user' ? item.role : undefined
           }))
         );
       }
@@ -97,7 +98,8 @@ export const globalSearch = async (params: SearchParams) => {
             ? item.clerkId
             : type === 'answer'
                 ? item.questions
-                : item._id
+                : item._id,
+        role: type === 'user' ? item.role : undefined
       }));
     }
 

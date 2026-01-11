@@ -193,14 +193,18 @@ export async function deleteUser(params: DeleteUserParams) {
     if (!requesterClerkId) throw new Error("Unauthorized");
 
     const requester = await User.findOne({ clerkId: requesterClerkId });
-    if (!requester || requester.role !== "admin") {
-      throw new Error("Only admins can delete users");
+    if (!requester || (requester.role !== "admin" && requester.role !== "owner")) {
+      throw new Error("Unauthorized");
     }
 
     const user = await User.findOne({ clerkId });
 
     if (!user) {
       throw new Error("User not found");
+    }
+
+    if (user.role === "owner" && requester.role !== "owner") {
+      throw new Error("Only owners can delete other owners");
     }
 
     // Delete all questions authored by this user
@@ -387,7 +391,7 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
-        { path: "author", model: User, select: "_id clerkId name picture" },
+        { path: "author", model: User, select: "_id clerkId name picture role" },
       ],
     });
 
@@ -518,7 +522,7 @@ export const getUserQuestions = async (params: GetUserStatsParams) => {
           upvotes: -1,
         })
         .populate("tags", "_id name")
-        .populate("author", "_id clerkId name picture");
+        .populate("author", "_id clerkId name picture role");
 
     const isNextQuestion = totalQuestions > skipAmount + userQuestions.length;
 
@@ -546,7 +550,7 @@ export const getUserAnswers = async (params: GetUserStatsParams) => {
           upvotes: -1,
         })
         .populate("question", "_id title")
-        .populate("author", "_id clerkId name picture");
+        .populate("author", "_id clerkId name picture role");
 
     const isNextAnswer = totalAnswers > skipAmount + userAnswers.length;
 
@@ -568,8 +572,20 @@ export async function setUserRole(params: SetUserRoleParams) {
     if (!requesterClerkId) throw new Error("Unauthorized");
 
     const requester = await User.findOne({ clerkId: requesterClerkId });
-    if (!requester || requester.role !== "admin") {
-      throw new Error("Only admins can change user roles");
+    if (!requester || (requester.role !== "admin" && requester.role !== "owner")) {
+      throw new Error("Unauthorized");
+    }
+
+    const targetUser = await User.findById(userId);
+    if (!targetUser) throw new Error("User not found");
+
+    if (targetUser.role === "owner" && requester.role !== "owner") {
+      throw new Error("Only owners can change roles for other owners");
+    }
+
+    // Admins cannot set someone to Owner
+    if (role === "owner" && requester.role !== "owner") {
+      throw new Error("Only owners can appoint other owners");
     }
 
     await User.findByIdAndUpdate(userId, { role });
@@ -592,12 +608,16 @@ export async function toggleBanUser(params: ToggleBanUserParams) {
     if (!requesterClerkId) throw new Error("Unauthorized");
 
     const requester = await User.findOne({ clerkId: requesterClerkId });
-    if (!requester || requester.role !== "admin") {
-      throw new Error("Only admins can ban users");
+    if (!requester || (requester.role !== "admin" && requester.role !== "owner")) {
+      throw new Error("Unauthorized");
     }
 
     const user = await User.findById(userId);
     if (!user) throw new Error("User not found");
+
+    if (user.role === "owner" && requester.role !== "owner") {
+      throw new Error("Only owners can ban other owners");
+    }
 
     const newIsBanned = explicitIsBanned !== undefined ? explicitIsBanned : !user.isBanned;
 
