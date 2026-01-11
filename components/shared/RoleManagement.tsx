@@ -15,9 +15,10 @@ import { toast } from '@/components/ui/use-toast';
 interface Props {
   userId: string;
   currentRole: string;
+  loggedInUserRole: string;
 }
 
-const RoleManagement = ({ userId, currentRole }: Props) => {
+const RoleManagement = ({ userId, currentRole, loggedInUserRole }: Props) => {
   const pathname = usePathname();
 
   const handleRoleChange = async (newRole: string) => {
@@ -41,6 +42,8 @@ const RoleManagement = ({ userId, currentRole }: Props) => {
     }
   };
 
+  const isOwner = loggedInUserRole === 'owner';
+
   return (
     <div className="mt-2 flex items-center gap-2">
       <p className="body-medium text-dark400_light700">Change Role:</p>
@@ -52,6 +55,7 @@ const RoleManagement = ({ userId, currentRole }: Props) => {
           <SelectItem value="member">Member</SelectItem>
           <SelectItem value="moderator">Moderator</SelectItem>
           <SelectItem value="admin">Admin</SelectItem>
+          {isOwner && <SelectItem value="owner">Owner</SelectItem>}
         </SelectContent>
       </Select>
     </div>

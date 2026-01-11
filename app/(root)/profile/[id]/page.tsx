@@ -14,6 +14,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import RoleManagement from "@/components/shared/RoleManagement";
 import UserAdminActions from "@/components/shared/UserAdminActions";
+import UserDisplay from "@/components/shared/UserDisplay";
 
 export const metadata: Metadata = {
   title: "Profile",
@@ -34,12 +35,12 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
   const { user: userDoc, totalQuestions, totalAnswers, reputation, badgeCounts } = result;
   const user = JSON.parse(JSON.stringify(userDoc));
 
-  const isAuthorizedToManage = loggedInUser?.role === 'admin';
+  const canManageTarget = (loggedInUser?.role === 'owner') || (loggedInUser?.role === 'admin' && user.role !== 'owner');
 
   return (
     <div className="w-full">
       <div className="text-dark100_light900 mt-1 flex w-full flex-col px-6 pb-2 pt-4 sm:px-12">
-        <h1 className="text-lg ">{user.name}</h1>
+        <UserDisplay name={user.name} role={user.role} className="text-lg" />
         <p className="text-variant">Stats - {reputation}</p>
       </div>
       <div className="flex-center relative h-[200px] w-full bg-dark-4/10 dark:bg-dark-3">
@@ -99,7 +100,7 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
       <div className="flex flex-col-reverse items-start justify-between px-6 pt-16 sm:flex-row sm:px-10">
         <div className="flex flex-col items-start gap-4 lg:flex-row">
           <div className="mt-3">
-            <h2 className="h2-bold text-dark100_light900">{user.name}</h2>
+            <UserDisplay name={user.name} role={user.role} className="h2-bold text-dark100_light900" />
             <div className="flex items-center gap-2">
               <p className="paragraph-regular text-dark200_light800">
                 @{user.username}
@@ -107,6 +108,8 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
               <div className={`flex items-center justify-center rounded-lg border px-3 py-1 backdrop-blur-sm ${
                 user.isBanned
                   ? 'border-yellow-500/30 bg-yellow-500/10 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
+                  : user.role === 'owner'
+                  ? 'border-blue-900/30 bg-blue-900/10 shadow-[0_0_15px_rgba(30,58,138,0.2)]'
                   : user.role === 'admin' 
                   ? 'border-red-500/30 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
                   : user.role === 'moderator' 
@@ -116,6 +119,8 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
                 <span className={`subtle-medium uppercase tracking-wider ${
                   user.isBanned
                     ? 'text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]'
+                    : user.role === 'owner'
+                    ? 'role-sparkle-owner drop-shadow-[0_0_5px_rgba(30,58,138,0.8)]'
                     : user.role === 'admin' 
                     ? 'text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]' 
                     : user.role === 'moderator' 
@@ -126,11 +131,12 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
                 </span>
               </div>
             </div>
-            {isAuthorizedToManage && user.clerkId !== clerkId && (
+            {canManageTarget && user.clerkId !== clerkId && (
               <>
                 <RoleManagement 
                   userId={user._id.toString()} 
                   currentRole={user.role} 
+                  loggedInUserRole={loggedInUser?.role}
                 />
                 <UserAdminActions 
                   userId={user._id.toString()} 
