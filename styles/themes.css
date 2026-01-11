@@ -1,9 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer utilities {
-  .background-light850_dark100 {
+.background-light850_dark100 {
     @apply bg-light-1 dark:bg-dark-2;
   }
 
@@ -229,6 +224,43 @@
       rgba(19, 22, 28, 0.7) 100%
     );
   }
-}
+
+  /* Role and Sparkle Animations */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  .role-sparkle-owner {
+    background: linear-gradient(90deg, #001a33, #004080, #001a33, #0073e6, #001a33);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+    font-weight: bold;
+  }
+
+  .role-sparkle-admin {
+    background: linear-gradient(90deg, #ef4444, #f87171, #ef4444);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s linear infinite;
+    font-weight: bold;
+  }
+
+  .role-sparkle-moderator {
+    background: linear-gradient(90deg, #22c55e, #4ade80, #22c55e);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 5s linear infinite;
+    font-weight: bold;
+  }
+
+  .role-sparkle-member {
+    @apply text-dark100_light900;
+    font-weight: 500;
+  }
 
 

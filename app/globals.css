@@ -1,9 +1,8 @@
+@import url("../styles/themes.css");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url("../styles/themes.css");
 
 body {
   font-family: "Inter", sans-serif;
@@ -179,4 +178,6 @@ code {
 ::-webkit-scrollbar-thumb:hover {
   background: #43434b; /* Color of the scrollbar thumb on hover */
 }
+
+
 
