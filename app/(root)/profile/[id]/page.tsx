@@ -4,7 +4,7 @@ import QuestionTab from "@/components/shared/QuestionTab";
 import Stats from "@/components/shared/Stats";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getUserInfo } from "@/lib/actions/user.action";
+import { getUserInfo, getOrCreateUser } from "@/lib/actions/user.action";
 import { getJoinedDate } from "@/lib/utils";
 import { URLProps } from "@/types";
 import { auth, SignedIn, UserButton } from "@clerk/nextjs";
@@ -12,6 +12,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import RoleManagement from "@/components/shared/RoleManagement";
+import UserAdminActions from "@/components/shared/UserAdminActions";
 
 export const metadata: Metadata = {
   title: "Profile",
@@ -20,13 +22,19 @@ export const metadata: Metadata = {
 
 const ProfileDetails = async ({ params, searchParams }: URLProps) => {
   const { userId: clerkId } = auth();
+  const loggedInUserDoc = clerkId ? await getOrCreateUser({ userId: clerkId }) : null;
+  const loggedInUser = loggedInUserDoc ? JSON.parse(JSON.stringify(loggedInUserDoc)) : null;
+  
   const result = await getUserInfo({
     userId: params.id,
   });
 
   if (!result) notFound();
 
-  const { user, totalQuestions, totalAnswers, reputation, badgeCounts } = result;
+  const { user: userDoc, totalQuestions, totalAnswers, reputation, badgeCounts } = result;
+  const user = JSON.parse(JSON.stringify(userDoc));
+
+  const isAuthorizedToManage = loggedInUser?.role === 'admin';
 
   return (
     <div className="w-full">
@@ -92,9 +100,47 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
         <div className="flex flex-col items-start gap-4 lg:flex-row">
           <div className="mt-3">
             <h2 className="h2-bold text-dark100_light900">{user.name}</h2>
-            <p className="paragraph-regular text-dark200_light800">
-              @{user.username}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="paragraph-regular text-dark200_light800">
+                @{user.username}
+              </p>
+              <div className={`flex items-center justify-center rounded-lg border px-3 py-1 backdrop-blur-sm ${
+                user.isBanned
+                  ? 'border-yellow-500/30 bg-yellow-500/10 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
+                  : user.role === 'admin' 
+                  ? 'border-red-500/30 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
+                  : user.role === 'moderator' 
+                  ? 'border-green-500/30 bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.2)]' 
+                  : 'border-slate-500/30 bg-slate-500/10 shadow-[0_0_15px_rgba(203,213,225,0.2)]'
+              }`}>
+                <span className={`subtle-medium uppercase tracking-wider ${
+                  user.isBanned
+                    ? 'text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]'
+                    : user.role === 'admin' 
+                    ? 'text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]' 
+                    : user.role === 'moderator' 
+                    ? 'text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.8)]' 
+                    : 'text-slate-300 drop-shadow-[0_0_5px_rgba(203,213,225,0.8)]'
+                }`}>
+                  {user.isBanned ? 'BANNED' : user.role}
+                </span>
+              </div>
+            </div>
+            {isAuthorizedToManage && user.clerkId !== clerkId && (
+              <>
+                <RoleManagement 
+                  userId={user._id.toString()} 
+                  currentRole={user.role} 
+                />
+                <UserAdminActions 
+                  userId={user._id.toString()} 
+                  clerkId={user.clerkId}
+                  isBanned={user.isBanned || false}
+                  banReason={user.banReason}
+                  banExpiration={user.banExpiration}
+                />
+              </>
+            )}
             <div className="mt-5 flex w-full flex-col items-start justify-start gap-3">
               <ProfileLink
                 imgUrl="/assets/icons/calendar.svg"
