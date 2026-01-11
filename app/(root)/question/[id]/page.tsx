@@ -27,12 +27,23 @@ interface QuestionDetailsProps {
 }
 
 const page = async ({ params, searchParams }: QuestionDetailsProps) => {
-  const result = await getQuestionById({ questionId: params.id });
+  const question = await getQuestionById({ questionId: params.id });
+  
+  if (!question) {
+    return (
+      <div className="flex-center h-screen">
+        <h1 className="h1-bold text-dark100_light900">Question not found</h1>
+      </div>
+    )
+  }
+
+  const result = JSON.parse(JSON.stringify(question));
+  
   const { userId: clerkId } = auth(); // user from clerkdb
   let mongoUser: any;
   if (clerkId) {
-    mongoUser = await getOrCreateUser({ userId: clerkId });
-    // gets user from mongodb (creates if not exists)
+    const user = await getOrCreateUser({ userId: clerkId });
+    mongoUser = JSON.parse(JSON.stringify(user));
   }
 
   return (
@@ -104,6 +115,7 @@ const page = async ({ params, searchParams }: QuestionDetailsProps) => {
             questionId={result._id}
             userId={mongoUser._id}
             clerkId={mongoUser.clerkId}
+            role={mongoUser.role}
             totalAnswers={result.answers.length}
             page={searchParams?.page ? +searchParams?.page : 1}
             filter={searchParams?.filter}

@@ -20,7 +20,7 @@ const Community = async ({ searchParams }: SearchParamsProps) => {
     page: searchParams.page ? +searchParams.page : 1,
   });
 
-
+  const users = JSON.parse(JSON.stringify(result.users));
 
   return (
     <div className="px-6 sm:px-12 ">
@@ -37,8 +37,8 @@ const Community = async ({ searchParams }: SearchParamsProps) => {
       <h1 className="h1-bold text-dark100_light900 mt-5">Community</h1>
 
       <section className="mt-5  grid w-full grid-cols-2 gap-3 max-sm:gap-1 md:grid-cols-3 ">
-        {result.users.length > 0 ? (
-          result.users.map((user) => <UserCard key={user._id} user={user} />)
+        {users.length > 0 ? (
+          users.map((user: any) => <UserCard key={user._id} user={user} />)
         ) : (
           <div className="paragraph-regular text-dark200_light800 mx-auto max-w-4xl text-center">
             <p>No users yet</p>

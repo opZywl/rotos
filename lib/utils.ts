@@ -8,9 +8,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const getTimestamp = (createdAt: Date): string => {
+export const getTimestamp = (createdAt: Date | string): string => {
+  const date = new Date(createdAt);
   const now = new Date();
-  const diff = now.getTime() - createdAt.getTime();
+  const diff = now.getTime() - date.getTime();
   const diffSeconds = Math.floor(diff / 1000);
   const diffMinutes = Math.floor(diffSeconds / 60);
   const diffHours = Math.floor(diffMinutes / 60);
@@ -50,7 +51,8 @@ export const formatAndDivideNumber = (num: number | null | undefined): string =>
 };
 
 
-export const getJoinedDate = (date: Date): string => {
+export const getJoinedDate = (dateParam: Date | string): string => {
+  const date = new Date(dateParam);
   // Extract the month and year from the Date object
   const month = date.toLocaleString('default', { month: 'long' });
   const year = date.getFullYear();
