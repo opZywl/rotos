@@ -31,7 +31,7 @@ const UserSchema = new Schema({
     location: { type: String},
     portfolioWebsite: { type: String},
     reputation: { type: Number, default: 0},
-    role: { type: String, enum: ['member', 'moderator', 'admin'], default: 'member' },
+    role: { type: String, enum: ['member', 'moderator', 'admin', 'owner'], default: 'member' },
     isBanned: { type: Boolean, default: false },
     banExpiration: { type: Date },
     banReason: { type: String },
