@@ -2,9 +2,10 @@ import Link from "next/link";
 
 import Metric from "../shared/Metric";
 import { formatAndDivideNumber, getTimestamp } from "@/lib/utils";
-import { SignedIn } from "@clerk/nextjs";
+import { SignedIn, auth } from "@clerk/nextjs";
 import EditDeleteAction from "../shared/EditDeleteAction";
 import Image from "next/image";
+import { getOrCreateUser } from "@/lib/actions/user.action";
 
 interface Props {
   clerkId?: string | null;
@@ -24,7 +25,7 @@ interface Props {
   createdAt: Date;
 }
 
-const AnswerCard = ({
+const AnswerCard = async ({
   clerkId,
   _id,
   question,
@@ -33,7 +34,15 @@ const AnswerCard = ({
   downvotes,
   createdAt,
 }: Props) => {
-  const showActionButtons = clerkId && clerkId === author.clerkId;
+  const { userId: clerkIdFromAuth } = auth(); // user from clerkdb
+  let mongoUser;
+  if (clerkIdFromAuth) {
+    const user = await getOrCreateUser({ userId: clerkIdFromAuth });
+    mongoUser = JSON.parse(JSON.stringify(user));
+    // gets user from mongodb (creates if not exists)
+  }
+
+  const showActionButtons = (clerkIdFromAuth && clerkIdFromAuth === author.clerkId) || mongoUser?.role === 'moderator' || mongoUser?.role === 'admin';
 
   return (
     <div className="light-border-2 border-b px-6 sm:px-12 ">

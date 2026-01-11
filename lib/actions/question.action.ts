@@ -19,10 +19,11 @@ import { revalidatePath } from "next/cache";
 import Answer from "@/database/answer.model";
 import Interaction from "@/database/interaction.model";
 import { FilterQuery } from "mongoose";
+import { auth } from "@clerk/nextjs";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { searchQuery, filter, page = 1, pageSize = 20 } = params;
 
@@ -77,9 +78,14 @@ export async function getQuestions(params: GetQuestionsParams) {
 export async function createQuestion(params: CreateQuestionParams) {
   try {
     // connect to DB
-    connectToDatabase();
+    await connectToDatabase();
 
     const { title, content, tags, author, path } = params;
+
+    const user = await User.findById(author);
+    if (user?.isBanned) {
+      throw new Error("Your account has been banned. You cannot create questions.");
+    }
 
     // create the question
     const question = await Question.create({
@@ -124,7 +130,7 @@ export async function createQuestion(params: CreateQuestionParams) {
 
 export async function getQuestionById(params: GetQuestionByIdParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { questionId } = params;
     // using .populate so that items like tags can be viewed. (only things like title and desc will come using .findbyid method , but to get things like tags that are linked to question model we have to use .populate method)
@@ -145,9 +151,14 @@ export async function getQuestionById(params: GetQuestionByIdParams) {
 
 export async function upvoteQuestion(params: QuestionVoteParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { questionId, userId, hasupVoted, hasdownVoted, path } = params;
+
+    const user = await User.findById(userId);
+    if (user?.isBanned) {
+      throw new Error("Your account has been banned. You cannot vote.");
+    }
 
     let updateQuery = {};
 
@@ -195,9 +206,14 @@ export async function upvoteQuestion(params: QuestionVoteParams) {
 
 export async function downvoteQuestion(params: QuestionVoteParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { questionId, userId, hasupVoted, hasdownVoted, path } = params;
+
+    const user = await User.findById(userId);
+    if (user?.isBanned) {
+      throw new Error("Your account has been banned. You cannot vote.");
+    }
 
     let updateQuery = {};
 
@@ -239,18 +255,33 @@ export async function downvoteQuestion(params: QuestionVoteParams) {
 
 export const deleteQuestion = async (params: DeleteQuestionParams) => {
   try {
-    connectToDatabase();
+    await connectToDatabase();
     const { questionId, path } = params;
+    const { userId: clerkId } = auth();
+
+    if (!clerkId) throw new Error("Unauthorized");
+
+    const mongoUser = await User.findOne({ clerkId });
+    if (!mongoUser) throw new Error("User not found");
+
+    const question = await Question.findById(questionId);
+    if (!question) throw new Error("Question not found");
+
+    const isAuthor = question.author.toString() === mongoUser._id.toString();
+    const isModerator = mongoUser.role === "moderator";
+    const isAdmin = mongoUser.role === "admin";
+
+    if (!isAuthor && !isModerator && !isAdmin) {
+      throw new Error("Unauthorized");
+    }
 
     await Question.deleteOne({ _id: questionId });
     await Answer.deleteMany({ question: questionId });
     await Interaction.deleteMany({ question: questionId });
     await Tag.updateMany(
-      { question: questionId },
+      { questions: questionId },
       { $pull: { questions: questionId } }
     );
-
-    
 
     revalidatePath(path);
   } catch (error) {
@@ -261,7 +292,7 @@ export const deleteQuestion = async (params: DeleteQuestionParams) => {
 
 export const editQuestion = async (params: EditQuestionParams) => {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { questionId, title, content, path } = params;
 
@@ -284,7 +315,7 @@ export const editQuestion = async (params: EditQuestionParams) => {
 
 export const getTopQuestions = async () => {
   try {
-    connectToDatabase();
+    await connectToDatabase();
     const topQuestions = await Question.find({})
       .sort({ views: -1, upvotes: -1 })
       .limit(5);

@@ -32,7 +32,6 @@ interface QuestionProps {
 const QuestionCard = async (props: QuestionProps) => {
   const {
     _id,
-    clerkId,
     title,
     tags,
     author,
@@ -43,13 +42,15 @@ const QuestionCard = async (props: QuestionProps) => {
     createdAt,
   } = props;
 
-  const showActionButtons = clerkId && clerkId === author.clerkId;
-  const { userId } = auth(); // user from clerkdb
+  const { userId: clerkIdFromAuth } = auth(); // user from clerkdb
   let mongoUser;
-  if (userId) {
-    mongoUser = await getOrCreateUser({ userId });
+  if (clerkIdFromAuth) {
+    const user = await getOrCreateUser({ userId: clerkIdFromAuth });
+    mongoUser = JSON.parse(JSON.stringify(user));
     // gets user from mongodb (creates if not exists)
   }
+
+  const showActionButtons = (clerkIdFromAuth && clerkIdFromAuth === author.clerkId) || mongoUser?.role === 'moderator' || mongoUser?.role === 'admin';
 
   return (
     <div className="card-wrapper light-border-2 border-b px-6 pb-6 pt-5 xs:mt-1 sm:px-10 ">

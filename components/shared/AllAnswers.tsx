@@ -17,6 +17,7 @@ interface Props {
   totalAnswers: number;
   page?: number;
   filter?: string;
+  role?: string;
 }
 
 const AllAnswers = async ({
@@ -26,6 +27,7 @@ const AllAnswers = async ({
   totalAnswers,
   page,
   filter,
+  role,
 }: Props) => {
   const result = await getAnswers({
     questionId,
@@ -89,7 +91,7 @@ const AllAnswers = async ({
                   hasdownVoted={answer.downvotes.includes(userId)}
                   isAnswer={true}
                 />
-                {clerkId && clerkId === answer.author.clerkId && (
+                {clerkId && (clerkId === answer.author.clerkId || role === 'moderator' || role === 'admin') && (
                   <div className="light-border-2 rounded-md border px-2 py-1 hover:bg-light-3/40 dark:hover:bg-dark-4/70">
                     <EditDeleteAction
                       type="Answer"

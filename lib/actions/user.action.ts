@@ -12,8 +12,10 @@ import {
   GetUserStatsParams,
   ToggleSaveQuestionParams,
   UpdateUserParams,
+  SetUserRoleParams,
+  ToggleBanUserParams,
 } from "./shared.types";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import Answer from "@/database/answer.model";
@@ -21,10 +23,12 @@ import Interaction from "@/database/interaction.model";
 import { BadgeCriteriaType } from "@/types";
 import { assignBadges } from "../utils";
 import { clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs";
 
 export const getUserById = async (params: any) => {
+  noStore();
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { userId } = params;
 
@@ -37,6 +41,7 @@ export const getUserById = async (params: any) => {
 };
 
 export const getOrCreateUser = async (params: { userId: string }) => {
+  noStore();
   try {
     await connectToDatabase();
 
@@ -150,7 +155,7 @@ export async function checkUsernameAvailable(username: string) {
 
 export async function createUser(userData: CreateUserParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const newUser = await User.create(userData);
 
@@ -163,7 +168,7 @@ export async function createUser(userData: CreateUserParams) {
 
 export async function updateUser(params: UpdateUserParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { clerkId, updateData, path } = params;
 
@@ -180,8 +185,17 @@ export async function updateUser(params: UpdateUserParams) {
 
 export async function deleteUser(params: DeleteUserParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
     const { clerkId } = params;
+
+    const { userId: requesterClerkId } = auth();
+
+    if (!requesterClerkId) throw new Error("Unauthorized");
+
+    const requester = await User.findOne({ clerkId: requesterClerkId });
+    if (!requester || requester.role !== "admin") {
+      throw new Error("Only admins can delete users");
+    }
 
     const user = await User.findOne({ clerkId });
 
@@ -239,7 +253,7 @@ export async function deleteUser(params: DeleteUserParams) {
 
 export async function getAllUsers(params: GetAllUsersParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { page = 1, pageSize = 9, filter, searchQuery } = params;
 
@@ -290,7 +304,7 @@ export async function getAllUsers(params: GetAllUsersParams) {
 
 export async function toggleSaveQuestion(params: ToggleSaveQuestionParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { userId, questionId, path } = params;
 
@@ -329,7 +343,7 @@ export async function toggleSaveQuestion(params: ToggleSaveQuestionParams) {
 
 export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { clerkId, searchQuery, filter, page = 1, pageSize = 20 } = params;
 
@@ -392,8 +406,9 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
 }
 
 export const getUserInfo = async (params: GetUserByIdParams) => {
+  noStore();
   try {
-    connectToDatabase();
+    await connectToDatabase();
     const { userId } = params;
     const user = await User.findOne({ clerkId: userId });
     if (!user) {
@@ -484,8 +499,9 @@ export const getUserInfo = async (params: GetUserByIdParams) => {
 };
 
 export const getUserQuestions = async (params: GetUserStatsParams) => {
+  noStore();
   try {
-    connectToDatabase();
+    await connectToDatabase();
     const { userId, page = 1, pageSize = 10 } = params;
     // pagination
 
@@ -514,8 +530,9 @@ export const getUserQuestions = async (params: GetUserStatsParams) => {
 };
 
 export const getUserAnswers = async (params: GetUserStatsParams) => {
+  noStore();
   try {
-    connectToDatabase();
+    await connectToDatabase();
     const { userId, page = 1, pageSize = 10 } = params;
 
     const skipAmount = (page - 1) * pageSize;
@@ -539,3 +556,72 @@ export const getUserAnswers = async (params: GetUserStatsParams) => {
     throw error;
   }
 };
+
+export async function setUserRole(params: SetUserRoleParams) {
+  try {
+    await connectToDatabase();
+
+    const { userId, role, path } = params;
+
+    const { userId: requesterClerkId } = auth();
+
+    if (!requesterClerkId) throw new Error("Unauthorized");
+
+    const requester = await User.findOne({ clerkId: requesterClerkId });
+    if (!requester || requester.role !== "admin") {
+      throw new Error("Only admins can change user roles");
+    }
+
+    await User.findByIdAndUpdate(userId, { role });
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function toggleBanUser(params: ToggleBanUserParams) {
+  try {
+    await connectToDatabase();
+
+    const { userId, path, banReason, banExpiration, isBanned: explicitIsBanned } = params;
+
+    const { userId: requesterClerkId } = auth();
+
+    if (!requesterClerkId) throw new Error("Unauthorized");
+
+    const requester = await User.findOne({ clerkId: requesterClerkId });
+    if (!requester || requester.role !== "admin") {
+      throw new Error("Only admins can ban users");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    const newIsBanned = explicitIsBanned !== undefined ? explicitIsBanned : !user.isBanned;
+
+    const expiration = banExpiration ? new Date(banExpiration) : null;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId },
+      { 
+        $set: {
+          isBanned: newIsBanned,
+          banReason: newIsBanned ? (banReason || "Violation of Community Guidelines") : null,
+          banExpiration: newIsBanned ? expiration : null,
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) throw new Error("Failed to update user ban status");
+
+    revalidatePath(path);
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

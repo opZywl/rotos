@@ -12,12 +12,18 @@ import Question from "@/database/question.model";
 import { revalidatePath } from "next/cache";
 import Interaction from "@/database/interaction.model";
 import User from "@/database/user.model";
+import { auth } from "@clerk/nextjs";
 
 export const createAnswer = async (params: CreateAnswerParams) => {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { content, author, question, path } = params;
+
+    const user = await User.findById(author);
+    if (user?.isBanned) {
+      throw new Error("Your account has been banned. You cannot create answers.");
+    }
 
     const newAnswer = await Answer.create({
       content,
@@ -57,7 +63,7 @@ export const createAnswer = async (params: CreateAnswerParams) => {
 
 export async function getAnswers(params: GetAnswersParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { questionId, sortBy, page = 1, pageSize = 10 } = params;
 
@@ -104,9 +110,14 @@ export async function getAnswers(params: GetAnswersParams) {
 
 export async function upvoteAnswer(params: AnswerVoteParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { answerId, userId, hasupVoted, hasdownVoted, path } = params;
+
+    const user = await User.findById(userId);
+    if (user?.isBanned) {
+      throw new Error("Your account has been banned. You cannot vote.");
+    }
 
     let updateQuery = {};
 
@@ -153,9 +164,14 @@ export async function upvoteAnswer(params: AnswerVoteParams) {
 
 export async function downvoteAnswer(params: AnswerVoteParams) {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const { answerId, userId, hasupVoted, hasdownVoted, path } = params;
+
+    const user = await User.findById(userId);
+    if (user?.isBanned) {
+      throw new Error("Your account has been banned. You cannot vote.");
+    }
 
     let updateQuery = {};
 
@@ -199,12 +215,24 @@ export async function downvoteAnswer(params: AnswerVoteParams) {
 
 export const deleteAnswer = async (params: DeleteAnswerParams) => {
   try {
-    connectToDatabase();
+    await connectToDatabase();
     const { answerId, path } = params;
+    const { userId: clerkId } = auth();
+
+    if (!clerkId) throw new Error("Unauthorized");
+
+    const mongoUser = await User.findOne({ clerkId });
+    if (!mongoUser) throw new Error("User not found");
 
     const answer = await Answer.findById(answerId);
-    if (!answer) {
-      throw new Error("No answer found");
+    if (!answer) throw new Error("No answer found");
+
+    const isAuthor = answer.author.toString() === mongoUser._id.toString();
+    const isModerator = mongoUser.role === "moderator";
+    const isAdmin = mongoUser.role === "admin";
+
+    if (!isAuthor && !isModerator && !isAdmin) {
+      throw new Error("Unauthorized");
     }
 
     await answer.deleteOne({ _id: answerId });
