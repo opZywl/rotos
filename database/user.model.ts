@@ -11,6 +11,10 @@ export interface IUser extends Document{
     location?: string;
     portfolioWebsite?: string;
     reputation?:  number;
+    role: string;
+    isBanned?: boolean;
+    banExpiration?: Date;
+    banReason?: string;
     saved: Schema.Types.ObjectId[];
     joinedAt: Date;
     needsUsernameSetup?: boolean;
@@ -27,6 +31,10 @@ const UserSchema = new Schema({
     location: { type: String},
     portfolioWebsite: { type: String},
     reputation: { type: Number, default: 0},
+    role: { type: String, enum: ['member', 'moderator', 'admin'], default: 'member' },
+    isBanned: { type: Boolean, default: false },
+    banExpiration: { type: Date },
+    banReason: { type: String },
     saved: [{ type: Schema.Types.ObjectId, ref: 'Question'}],
     joinedAt: { type: Date, default: Date.now},
     needsUsernameSetup: { type: Boolean, default: false}

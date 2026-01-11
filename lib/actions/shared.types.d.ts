@@ -114,6 +114,7 @@ export interface CreateUserParams {
   username: string;
   email: string;
   picture: string;
+  role?: string;
 }
 
 export interface GetUserByIdParams {
@@ -155,4 +156,18 @@ export interface GetUserStatsParams {
 
 export interface DeleteUserParams {
   clerkId: string;
+}
+
+export interface SetUserRoleParams {
+  userId: string;
+  role: string;
+  path: string;
+}
+
+export interface ToggleBanUserParams {
+  userId: string;
+  path: string;
+  banReason?: string;
+  banExpiration?: Date | string;
+  isBanned?: boolean;
 }
