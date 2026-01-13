@@ -132,11 +132,11 @@ export const getQuestionsByTagId = async (
       options: {
         skip: skipAmount,
         limit: pageSize + 1,
-        sort: { createdAt: -1 },
+        sort: { isPinned: -1, pinnedAt: -1, createdAt: -1 },
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
-        { path: "author", model: User, select: "_id clerkId name picture" },
+        { path: "author", model: User, select: "_id clerkId name picture role" },
       ],
     });
 

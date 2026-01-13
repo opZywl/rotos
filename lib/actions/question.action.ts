@@ -13,6 +13,7 @@ import {
   GetQuestionsParams,
   QuestionVoteParams,
   RecommendedParams,
+  TogglePinQuestionParams,
 } from "./shared.types";
 import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
@@ -62,7 +63,7 @@ export async function getQuestions(params: GetQuestionsParams) {
       .populate({ path: "author", model: User, select: "_id clerkId name picture role" })
       .skip(skipAmount)
       .limit(pageSize)
-      .sort(sortOptions);
+      .sort({ isPinned: -1, pinnedAt: -1, ...sortOptions, createdAt: -1 });
 
     const totalQuestions = await Question.countDocuments(query);
 
@@ -138,6 +139,11 @@ export async function getQuestionById(params: GetQuestionByIdParams) {
       .populate({ path: "tags", model: Tag, select: "_id name" })
       .populate({
         path: "author",
+        model: User,
+        select: "_id clerkId name picture role",
+      })
+      .populate({
+        path: "lastEditedBy",
         model: User,
         select: "_id clerkId name picture role",
       });
@@ -268,10 +274,9 @@ export const deleteQuestion = async (params: DeleteQuestionParams) => {
     if (!question) throw new Error("Question not found");
 
     const isAuthor = question.author.toString() === mongoUser._id.toString();
-    const isModerator = mongoUser.role === "moderator";
-    const isAdmin = mongoUser.role === "admin";
+    const isStaff = ["moderator", "admin", "owner"].includes(mongoUser.role);
 
-    if (!isAuthor && !isModerator && !isAdmin) {
+    if (!isAuthor && !isStaff) {
       throw new Error("Unauthorized");
     }
 
@@ -294,15 +299,62 @@ export const editQuestion = async (params: EditQuestionParams) => {
   try {
     await connectToDatabase();
 
-    const { questionId, title, content, path } = params;
+    const { questionId, title, content, path, editedById } = params;
 
-    const question = await Question.findById(questionId).populate("tags");
+    const question = await Question.findById(questionId);
 
     if (!question) {
       throw new Error("No question found");
     }
+
+    const { userId: clerkId } = auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    const mongoUser = await User.findOne({ clerkId });
+    if (!mongoUser) throw new Error("User not found");
+
+    const isAuthor = question.author.toString() === mongoUser._id.toString();
+    const isStaff = ["moderator", "admin", "owner"].includes(mongoUser.role);
+
+    if (!isAuthor && !isStaff) {
+      throw new Error("Unauthorized");
+    }
+
     question.title = title;
     question.content = content;
+    question.lastEditedBy = editedById;
+    question.lastEditedAt = new Date();
+
+    await question.save();
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const togglePinQuestion = async (params: TogglePinQuestionParams) => {
+  try {
+    await connectToDatabase();
+
+    const { questionId, path } = params;
+
+    const { userId: clerkId } = auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    const mongoUser = await User.findOne({ clerkId });
+    if (!mongoUser) throw new Error("User not found");
+
+    const isStaff = ["moderator", "admin", "owner"].includes(mongoUser.role);
+    if (!isStaff) throw new Error("Unauthorized");
+
+    const question = await Question.findById(questionId);
+    if (!question) throw new Error("Question not found");
+
+    const newIsPinned = !question.isPinned;
+    question.isPinned = newIsPinned;
+    question.pinnedAt = newIsPinned ? new Date() : undefined;
 
     await question.save();
 
@@ -388,7 +440,8 @@ export async function getRecommendedQuestions(params: RecommendedParams) {
         select: "_id clerkId name picture role",
       })
       .skip(skipAmount)
-      .limit(pageSize);
+      .limit(pageSize)
+      .sort({ isPinned: -1, pinnedAt: -1, createdAt: -1 });
 
     const isNext = totalQuestions > skipAmount + recommendedQuestions.length;
 

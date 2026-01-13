@@ -385,7 +385,7 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
       path: "saved",
       match: query,
       options: {
-        sort: sortOptions,
+        sort: { isPinned: -1, pinnedAt: -1, ...sortOptions },
         skip: skipAmount,
         limit: pageSize + 1,
       },
