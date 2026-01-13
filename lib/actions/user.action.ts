@@ -20,6 +20,7 @@ import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import Answer from "@/database/answer.model";
 import Interaction from "@/database/interaction.model";
+import "@/database/user-tag.model";
 import { BadgeCriteriaType } from "@/types";
 import { assignBadges } from "../utils";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -414,7 +415,7 @@ export const getUserInfo = async (params: GetUserByIdParams) => {
   try {
     await connectToDatabase();
     const { userId } = params;
-    const user = await User.findOne({ clerkId: userId });
+    const user = await User.findOne({ clerkId: userId }).populate("userTags");
     if (!user) {
       return null;
     }
