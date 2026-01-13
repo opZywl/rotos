@@ -5,6 +5,7 @@ import { getTimestamp } from "@/lib/utils";
 import { auth, SignedIn } from "@clerk/nextjs";
 import EditDeleteAction from "../shared/EditDeleteAction";
 import Image from "next/image";
+import { Pin } from "lucide-react";
 import Votes from "../shared/Votes";
 import { getOrCreateUser } from "@/lib/actions/user.action";
 import UserDisplay from "../shared/UserDisplay";
@@ -28,6 +29,7 @@ interface QuestionProps {
   views: number;
   answers: Array<object>;
   createdAt: Date;
+  isPinned?: boolean;
   clerkId?: string | null;
 }
 
@@ -42,6 +44,7 @@ const QuestionCard = async (props: QuestionProps) => {
     views,
     answers,
     createdAt,
+    isPinned,
   } = props;
 
   const { userId: clerkIdFromAuth } = auth(); // user from clerkdb
@@ -52,7 +55,7 @@ const QuestionCard = async (props: QuestionProps) => {
     // gets user from mongodb (creates if not exists)
   }
 
-  const showActionButtons = (clerkIdFromAuth && clerkIdFromAuth === author.clerkId) || mongoUser?.role === 'moderator' || mongoUser?.role === 'admin';
+  const showActionButtons = (clerkIdFromAuth && clerkIdFromAuth === author.clerkId) || mongoUser?.role === 'moderator' || mongoUser?.role === 'admin' || mongoUser?.role === 'owner';
 
   return (
     <div className="card-wrapper light-border-2 border-b px-6 pb-6 pt-5 xs:mt-1 sm:px-10 ">
@@ -84,7 +87,10 @@ const QuestionCard = async (props: QuestionProps) => {
         </div>
         <div className="flex-between w-full">
           <Link href={`/question/${_id}`}>
-            <h3 className="sm:h3-semibold base-semibold text-dark200_light900 line-clamp-1 flex-1 ">
+            <h3 className="sm:h3-semibold base-semibold text-dark200_light900 line-clamp-1 flex-1 flex items-center gap-2">
+              {isPinned && (
+                <Pin className="size-4 text-blue-500 rotate-45" />
+              )}
               {title}
             </h3>
           </Link>

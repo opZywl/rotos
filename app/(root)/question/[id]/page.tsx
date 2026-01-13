@@ -9,10 +9,14 @@ import { getTimestamp } from "@/lib/utils";
 import { auth, SignedIn, SignedOut } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
+import { Pin } from "lucide-react";
+import EditDeleteAction from "@/components/shared/EditDeleteAction";
 
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import Viewed from "@/components/shared/Viewed";
+import UserDisplay from "@/components/shared/UserDisplay";
+import QuestionPinAction from "@/components/shared/QuestionPinAction";
 
 export const metadata: Metadata = {
   title: "Question details",
@@ -63,21 +67,51 @@ const page = async ({ params, searchParams }: QuestionDetailsProps) => {
                 className="size-full object-cover"
               />
             </div>
-            <p className="paragraph-semibold text-dark300_light700">
-              {result.author.name}
-            </p>
+            <UserDisplay 
+              name={result.author.name} 
+              role={result.author.role} 
+              className="paragraph-semibold text-dark300_light700"
+            />
           </Link>
 
-          <span className="subtle-regular text-dark400_light700 mt-2 line-clamp-1 flex">
-            {getTimestamp(result.createdAt)}
-          </span>
+          <div className="flex items-center gap-3">
+            {mongoUser && ["moderator", "admin", "owner"].includes(mongoUser.role) && (
+              <QuestionPinAction 
+                questionId={JSON.stringify(result._id)} 
+                isPinned={result.isPinned} 
+              />
+            )}
+            {(clerkId === result.author.clerkId || (mongoUser && ["moderator", "admin", "owner"].includes(mongoUser.role))) && (
+              <div className="flex items-center justify-end gap-3 max-sm:w-full">
+                <EditDeleteAction type="Question" itemId={JSON.stringify(result._id)} />
+              </div>
+            )}
+            <span className="subtle-regular text-dark400_light700 line-clamp-1 flex">
+              {getTimestamp(result.createdAt)}
+            </span>
+          </div>
         </div>
-        <h2 className="h2-semibold text-dark200_light900 mt-3.5 w-full text-left">
+        <h2 className="h2-semibold text-dark200_light900 mt-3.5 w-full text-left flex items-center gap-2">
+          {result.isPinned && (
+            <Pin className="size-5 text-blue-500 rotate-45" />
+          )}
           {result.title}
         </h2>
       </div>
 
       <ParseHTML data={result.content} />
+
+      {result.lastEditedBy && (
+        <div className="mt-4 flex flex-wrap items-center gap-1 italic text-dark400_light700 subtle-regular">
+          <span>Last edit by:</span>
+          <UserDisplay 
+            name={result.lastEditedBy.name} 
+            role={result.lastEditedBy.role} 
+            className="font-medium"
+          />
+          <span>| {getTimestamp(result.lastEditedAt)}</span>
+        </div>
+      )}
       <div className="md:flex-between mt-6 flex w-full flex-col items-start gap-2 md:flex-row">
         <div className="flex w-2/3  flex-wrap gap-2">
           {result.tags.map((tag: any) => (

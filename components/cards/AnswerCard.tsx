@@ -44,7 +44,7 @@ const AnswerCard = async ({
     // gets user from mongodb (creates if not exists)
   }
 
-  const showActionButtons = (clerkIdFromAuth && clerkIdFromAuth === author.clerkId) || mongoUser?.role === 'moderator' || mongoUser?.role === 'admin';
+  const showActionButtons = (clerkIdFromAuth && clerkIdFromAuth === author.clerkId) || mongoUser?.role === 'moderator' || mongoUser?.role === 'admin' || mongoUser?.role === 'owner';
 
   return (
     <div className="light-border-2 border-b px-6 sm:px-12 ">

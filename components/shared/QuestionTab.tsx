@@ -35,6 +35,7 @@ const QuestionTab = async ({
           views={question.views}
           answers={question.answers}
           createdAt={question.createdAt}
+          isPinned={question.isPinned}
         />
       ))}
       <div className="mt-10">

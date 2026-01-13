@@ -94,7 +94,7 @@ const AllAnswers = async ({
                   hasdownVoted={answer.downvotes.includes(userId)}
                   isAnswer={true}
                 />
-                {clerkId && (clerkId === answer.author.clerkId || role === 'moderator' || role === 'admin') && (
+                {clerkId && (clerkId === answer.author.clerkId || role === 'moderator' || role === 'admin' || role === 'owner') && (
                   <div className="light-border-2 rounded-md border px-2 py-1 hover:bg-light-3/40 dark:hover:bg-dark-4/70">
                     <EditDeleteAction
                       type="Answer"
