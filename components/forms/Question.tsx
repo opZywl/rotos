@@ -62,6 +62,7 @@ const Question = ({ type, mongoUserId, questionData }: Props) => {
           title: values.title,
           content: values.explanation,
           path: pathname,
+          editedById: JSON.parse(mongoUserId),
         });
 
         router.push(`/question/${questionDetails._id}`);
