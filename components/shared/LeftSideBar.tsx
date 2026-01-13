@@ -17,24 +17,36 @@ import { Button } from "../ui/button";
 // Routes that require authentication
 const protectedRoutes = ["/collection", "/ask-question"];
 
-const LeftSideBar = () => {
+interface Props {
+  userRole?: string;
+}
+
+const LeftSideBar = ({ userRole }: Props) => {
   const pathname = usePathname();
   const router = useRouter();
   const { userId } = useAuth();
   const [links, setLinks] = useState(sidebarLinks);
 
   useEffect(() => {
+    // Filter out the Staff link if the user is not a staff member
+    const isStaff = ["moderator", "admin", "owner"].includes(userRole || "");
+    
+    let filteredLinks = sidebarLinks;
+    if (!isStaff) {
+      filteredLinks = sidebarLinks.filter(link => link.route !== "/staff");
+    }
+
     if (userId) {
-      setLinks((prevLinks) =>
-        prevLinks.map((link) =>
+      setLinks(
+        filteredLinks.map((link) =>
           link.route === "/profile"
             ? { ...link, route: `${link.route}/${userId}` }
             : link
         )
       );
     } else {
-      setLinks((prevLinks) =>
-        prevLinks.map((link) =>
+      setLinks(
+        filteredLinks.map((link) =>
           link.route.includes("/profile")
             ? { ...link, route: "/profile" }
             : link

@@ -28,14 +28,17 @@ interface UserParams {
   popularTags?: string | undefined;
 }
 
-const NavContent = () => {
+const NavContent = ({ userRole }: { userRole?: string }) => {
   const pathname = usePathname();
   const { userId } = useAuth();
+
+  const isStaff = ["moderator", "admin", "owner"].includes(userRole || "");
+  const links = isStaff ? mobileSidebarLinks : mobileSidebarLinks.filter(link => link.route !== "/staff");
 
   return (
     <section className="light-border mt-5 flex flex-col gap-3 border-t pt-4">
       <h2 className="text-dark300_light900 base-bold">Discover</h2>
-      {mobileSidebarLinks.map((item) => {
+      {links.map((item) => {
         const isActive =
           (pathname.includes(item.route) && item.route.length > 1) ||
           pathname === item.route;
@@ -148,7 +151,7 @@ const MobileNav = ({ user, popularTags }: UserParams) => {
           <div className="">
             <SheetClose asChild className="">
               {/* nav links */}
-              <NavContent />
+              <NavContent userRole={user?.role} />
             </SheetClose>
 
             <SignedIn>
