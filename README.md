@@ -1,20 +1,20 @@
 # Rotōs - Q&A Platform
 
-Uma plataforma de perguntas e respostas construída com Next.js 14, MongoDB, e Clerk Authentication.
+A Q&A platform built with Next.js 14, MongoDB, and Clerk Authentication.
 
 ## Features
 
 - Post questions
 - Voting system
-- Collections (salvar perguntas)
+- Collections (save questions)
 - Global data search
 - AI generated answers (Gemini)
 - Light/dark mode
-- Sistema de badges e reputação
+- Badge and reputation system
 
-## Tecnologias
+## Technologies
 
-- **Next.js 14** - Framework React
+- **Next.js 14** - React Framework
 - **TypeScript** - Static typing
 - **TailwindCSS** - Styling
 - **MongoDB** - Database
