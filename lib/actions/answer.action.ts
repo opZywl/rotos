@@ -228,10 +228,9 @@ export const deleteAnswer = async (params: DeleteAnswerParams) => {
     if (!answer) throw new Error("No answer found");
 
     const isAuthor = answer.author.toString() === mongoUser._id.toString();
-    const isModerator = mongoUser.role === "moderator";
-    const isAdmin = mongoUser.role === "admin";
+    const isStaff = ["moderator", "admin", "owner"].includes(mongoUser.role);
 
-    if (!isAuthor && !isModerator && !isAdmin) {
+    if (!isAuthor && !isStaff) {
       throw new Error("Unauthorized");
     }
 

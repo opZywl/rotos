@@ -24,13 +24,20 @@ const EditQuestion = async ({ params }: ParamsProps) => {
     questionId: params.id,
   });
 
+  if (!question) redirect("/");
+
+  const isAuthor = question.author.clerkId === userId;
+  const isStaff = ["moderator", "admin", "owner"].includes(mongoUser.role);
+
+  if (!isAuthor && !isStaff) redirect("/");
+
   return (
     <div className="mt-10 px-6 sm:px-12">
       <h1 className="h1-bold text-dark100_light900">Edit Question</h1>
       <div className="mt-9">
         <Question
           type="Edit"
-          mongoUserId={mongoUser._id}
+          mongoUserId={JSON.stringify(mongoUser._id)}
           questionData={JSON.stringify(question)}
         />
       </div>
