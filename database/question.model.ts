@@ -12,7 +12,10 @@ export interface IQuestion extends Document {
   author: Schema.Types.ObjectId;
   answers: Schema.Types.ObjectId[];
   createdAt: Date;
-
+  isPinned: boolean;
+  pinnedAt?: Date;
+  lastEditedBy?: Schema.Types.ObjectId;
+  lastEditedAt?: Date;
 }
 
 const QusetionSchema = new Schema({
@@ -24,7 +27,11 @@ const QusetionSchema = new Schema({
     downvotes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     author: { type: Schema.Types.ObjectId, ref: 'User' },
     answers: [{ type: Schema.Types.ObjectId, ref: 'Answer' }],
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    isPinned: { type: Boolean, default: false },
+    pinnedAt: { type: Date },
+    lastEditedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    lastEditedAt: { type: Date }
 })
 
 // turn the question schema into a model, if model doesnt exist create a model -> model('Question', QusetionSchema). models.Question -> is to check if model exists

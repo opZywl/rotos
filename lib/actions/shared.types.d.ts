@@ -87,6 +87,12 @@ export interface EditQuestionParams {
   title: string;
   content: string;
   path: string;
+  editedById: string;
+}
+
+export interface TogglePinQuestionParams {
+  questionId: string;
+  path: string;
 }
 
 export interface GetAllTagsParams {
