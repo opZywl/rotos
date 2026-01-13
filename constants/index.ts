@@ -42,6 +42,7 @@ export const sidebarLinks: SidebarLink[] = [
   {
     imgURL: "/assets/icons/suitcase.svg",
     route: "/staff",
+    classname: "row-start-6 row-end-7 col-start-1 col-end-3",
     label: "Staff",
   },
 ];
@@ -75,6 +76,7 @@ export const mobileSidebarLinks: SidebarLink[] = [
   {
     imgURL: "/assets/icons/suitcase.svg",
     route: "/staff",
+    classname: "row-start-6 row-end-7 col-start-1 col-end-3",
     label: "Staff",
   },
 ];

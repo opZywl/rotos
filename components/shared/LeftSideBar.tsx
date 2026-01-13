@@ -58,7 +58,7 @@ const LeftSideBar = ({ userRole }: Props) => {
         router.push("/"); // Redirect to home
       }
     }
-  }, [userId, pathname, router]);
+  }, [userId, pathname, router, userRole]);
 
   return (
     <section className=" background-light850_dark100 light-border sticky left-0 top-0 flex h-screen flex-col justify-between overflow-y-auto border-x p-6 pt-36 max-sm:hidden lg:w-[280px]  ">
