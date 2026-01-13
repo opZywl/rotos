@@ -25,6 +25,7 @@ import { BadgeCriteriaType } from "@/types";
 import { assignBadges } from "../utils";
 import { clerkClient } from "@clerk/nextjs/server";
 import { auth } from "@clerk/nextjs";
+import { createNotification } from "./notification.action";
 
 export const getUserById = async (params: any) => {
   noStore();
@@ -590,6 +591,12 @@ export async function setUserRole(params: SetUserRoleParams) {
     }
 
     await User.findByIdAndUpdate(userId, { role });
+
+    await createNotification({
+      recipient: userId,
+      type: "ROLE_UPDATED",
+      message: `${requester.name} updated your role to: ${role}`,
+    });
 
     revalidatePath(path);
   } catch (error) {

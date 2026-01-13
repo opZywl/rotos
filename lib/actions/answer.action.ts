@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import Interaction from "@/database/interaction.model";
 import User from "@/database/user.model";
 import { auth } from "@clerk/nextjs";
+import { createNotification } from "./notification.action";
 
 export const createAnswer = async (params: CreateAnswerParams) => {
   try {
@@ -53,6 +54,15 @@ export const createAnswer = async (params: CreateAnswerParams) => {
 
     //  increase author's reputation +10 points for answering a question
     await User.findByIdAndUpdate(author, { $inc: { reputation: 10 } });
+
+    if (questionObject.author.toString() !== author) {
+      await createNotification({
+        recipient: questionObject.author.toString(),
+        type: "COMMENT_ADDED",
+        message: `${user.name} commented on your post: "${questionObject.title}"`,
+        link: `/question/${question}#${newAnswer._id}`,
+      });
+    }
 
     revalidatePath(path);
   } catch (error) {

@@ -5,6 +5,7 @@ import UserTag from "@/database/user-tag.model";
 import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs";
+import { createNotification } from "./notification.action";
 import { 
   CreateUserTagParams, 
   UpdateUserTagParams, 
@@ -93,11 +94,17 @@ export async function getAllUserTags() {
 
 export async function assignUserTags(params: AssignUserTagParams) {
   try {
-    await validateStaffAccess();
+    const staffUser = await validateStaffAccess();
     const { userId, tagIds, path } = params;
 
     await User.findByIdAndUpdate(userId, { 
       $set: { userTags: tagIds } 
+    });
+
+    await createNotification({
+      recipient: userId,
+      type: "USER_TAGS_UPDATED",
+      message: `${staffUser.name} updated your UserTags.`,
     });
 
     revalidatePath(path);

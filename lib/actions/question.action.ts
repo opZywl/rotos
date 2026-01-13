@@ -21,6 +21,7 @@ import Answer from "@/database/answer.model";
 import Interaction from "@/database/interaction.model";
 import { FilterQuery } from "mongoose";
 import { auth } from "@clerk/nextjs";
+import { createNotification } from "./notification.action";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
@@ -280,6 +281,14 @@ export const deleteQuestion = async (params: DeleteQuestionParams) => {
       throw new Error("Unauthorized");
     }
 
+    if (!isAuthor && isStaff) {
+      await createNotification({
+        recipient: question.author.toString(),
+        type: "POST_DELETED",
+        message: `${mongoUser.name} deleted your post: "${question.title}"`,
+      });
+    }
+
     await Question.deleteOne({ _id: questionId });
     await Answer.deleteMany({ question: questionId });
     await Interaction.deleteMany({ question: questionId });
@@ -324,6 +333,15 @@ export const editQuestion = async (params: EditQuestionParams) => {
     question.content = content;
     question.lastEditedBy = editedById;
     question.lastEditedAt = new Date();
+
+    if (!isAuthor && isStaff) {
+      await createNotification({
+        recipient: question.author.toString(),
+        type: "POST_EDITED",
+        message: `${mongoUser.name} edited your post: "${title}"`,
+        link: `/question/${questionId}`,
+      });
+    }
 
     await question.save();
 
