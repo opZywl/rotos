@@ -15,6 +15,7 @@ export interface IUser extends Document{
     isBanned?: boolean;
     banExpiration?: Date;
     banReason?: string;
+    userTags: Schema.Types.ObjectId[];
     saved: Schema.Types.ObjectId[];
     joinedAt: Date;
     needsUsernameSetup?: boolean;
@@ -35,6 +36,7 @@ const UserSchema = new Schema({
     isBanned: { type: Boolean, default: false },
     banExpiration: { type: Date },
     banReason: { type: String },
+    userTags: [{ type: Schema.Types.ObjectId, ref: 'UserTag' }],
     saved: [{ type: Schema.Types.ObjectId, ref: 'Question'}],
     joinedAt: { type: Date, default: Date.now},
     needsUsernameSetup: { type: Boolean, default: false}

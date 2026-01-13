@@ -177,3 +177,27 @@ export interface ToggleBanUserParams {
   banExpiration?: Date | string;
   isBanned?: boolean;
 }
+
+export interface CreateUserTagParams {
+  name: string;
+  color: string;
+  path: string;
+}
+
+export interface UpdateUserTagParams {
+  tagId: string;
+  name: string;
+  color: string;
+  path: string;
+}
+
+export interface DeleteUserTagParams {
+  tagId: string;
+  path: string;
+}
+
+export interface AssignUserTagParams {
+  userId: string;
+  tagIds: string[];
+  path: string;
+}
