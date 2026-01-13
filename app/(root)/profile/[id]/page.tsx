@@ -5,6 +5,7 @@ import Stats from "@/components/shared/Stats";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUserInfo, getOrCreateUser } from "@/lib/actions/user.action";
+import { getAllUserTags } from "@/lib/actions/user-tag.action";
 import { getJoinedDate } from "@/lib/utils";
 import { URLProps } from "@/types";
 import { auth, SignedIn, UserButton } from "@clerk/nextjs";
@@ -15,6 +16,8 @@ import { notFound } from "next/navigation";
 import RoleManagement from "@/components/shared/RoleManagement";
 import UserAdminActions from "@/components/shared/UserAdminActions";
 import UserDisplay from "@/components/shared/UserDisplay";
+import UserTagBadge from "@/components/shared/UserTagBadge";
+import ManageUserTags from "@/components/shared/ManageUserTags";
 
 export const metadata: Metadata = {
   title: "Profile",
@@ -36,6 +39,12 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
   const user = JSON.parse(JSON.stringify(userDoc));
 
   const canManageTarget = (loggedInUser?.role === 'owner') || (loggedInUser?.role === 'admin' && user.role !== 'owner');
+  
+  let allUserTags: any[] = [];
+  if (canManageTarget) {
+    const tags = await getAllUserTags();
+    allUserTags = JSON.parse(JSON.stringify(tags));
+  }
 
   return (
     <div className="w-full">
@@ -130,13 +139,30 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
                   {user.isBanned ? 'BANNED' : user.role}
                 </span>
               </div>
+              
+              {user.userTags && user.userTags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {user.userTags.map((tag: any) => (
+                    <UserTagBadge 
+                      key={tag._id} 
+                      name={tag.name} 
+                      color={tag.color} 
+                    />
+                  ))}
+                </div>
+              )}
             </div>
             {canManageTarget && user.clerkId !== clerkId && (
-              <>
+              <div className="mt-4 flex flex-col gap-2">
                 <RoleManagement 
                   userId={user._id.toString()} 
                   currentRole={user.role} 
                   loggedInUserRole={loggedInUser?.role}
+                />
+                <ManageUserTags 
+                  userId={user._id.toString()}
+                  userTagIds={user.userTags?.map((t: any) => t._id) || []}
+                  allTags={allUserTags}
                 />
                 <UserAdminActions 
                   userId={user._id.toString()} 
@@ -145,7 +171,7 @@ const ProfileDetails = async ({ params, searchParams }: URLProps) => {
                   banReason={user.banReason}
                   banExpiration={user.banExpiration}
                 />
-              </>
+              </div>
             )}
             <div className="mt-5 flex w-full flex-col items-start justify-start gap-3">
               <ProfileLink
