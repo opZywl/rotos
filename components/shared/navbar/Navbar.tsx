@@ -7,6 +7,8 @@ import MobileNav from "./MobileNav";
 import GlobalSearch from "../search/GlobalSearch";
 import { getOrCreateUser } from "@/lib/actions/user.action";
 import { getAllTags } from "@/lib/actions/tag.actions";
+import Notifications from "./Notifications";
+import { getNotifications, getUnreadNotificationsCount } from "@/lib/actions/notification.action";
 
 const Navbar = async () => {
   const { userId } = auth();
@@ -20,6 +22,15 @@ const Navbar = async () => {
     picture: result?.picture,
     role: result?.role,
   };
+
+  let notifications = [];
+  let unreadCount = 0;
+
+  if (result) {
+    const notificationsData = await getNotifications({ userId: result._id.toString() });
+    notifications = notificationsData.notifications;
+    unreadCount = await getUnreadNotificationsCount({ userId: result._id.toString() });
+  }
 
   return (
     <nav className="flex-between fixed left-1/2 top-2 z-50 w-[95%] max-w-6xl -translate-x-1/2 gap-5 rounded-xl  bg-zinc-300/40 px-4 py-2 shadow-light-300 backdrop-blur-md backdrop-saturate-150 dark:bg-dark-4/70 dark:shadow-none max-sm:w-[98%] max-sm:gap-1 sm:px-7">
@@ -45,18 +56,21 @@ const Navbar = async () => {
       <div className="flex-between gap-5 max-sm:hidden">
         <SignedIn>
           {/* <SignedIn> is a clerk functionality that checks if user is authenticated, if yes then show content inside <SignedIn>   */}
-          <UserButton
-            afterSignOutUrl="/"
-            appearance={{
-              elements: {
-                // sets height and width for user profile button
-                avatarBox: "size-9",
-              },
-              variables: {
-                colorPrimary: "#ff7000",
-              },
-            }}
-          />
+          <div className="flex items-center gap-4">
+            <Notifications notifications={notifications} unreadCount={unreadCount} />
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  // sets height and width for user profile button
+                  avatarBox: "size-9",
+                },
+                variables: {
+                  colorPrimary: "#ff7000",
+                },
+              }}
+            />
+          </div>
         </SignedIn>
       </div>
     </nav>
