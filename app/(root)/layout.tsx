@@ -29,7 +29,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
       <div className={isBanned ? "pointer-events-none blur-[10px] select-none opacity-50 transition-all duration-500" : ""}>
         <Navbar />
         <div className="flex">
-          <LeftSideBar />
+          <LeftSideBar userRole={mongoUser?.role} />
 
           <section className="light-border flex min-h-screen  flex-1 flex-col border-r pb-6 pt-16 max-md:pb-14 ">
             <div className="w-full max-w-3xl font-spaceGrotesk">{children}</div>
