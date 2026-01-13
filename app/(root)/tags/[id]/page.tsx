@@ -34,6 +34,7 @@ const TagDetails = async ({ params, searchParams }: URLProps) => {
               views={question.views}
               answers={question.answers}
               createdAt={question.createdAt}
+              isPinned={question.isPinned}
             />
           ))
         ) : (

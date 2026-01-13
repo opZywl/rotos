@@ -69,7 +69,8 @@ export const globalSearch = async (params: SearchParams) => {
                 : type === 'answer'
                 ? item.questions
                 : item._id,
-            role: type === 'user' ? item.role : undefined
+            role: type === 'user' ? item.role : undefined,
+            isPinned: type === 'question' ? item.isPinned : undefined
           }))
         );
       }
@@ -99,7 +100,8 @@ export const globalSearch = async (params: SearchParams) => {
             : type === 'answer'
                 ? item.questions
                 : item._id,
-        role: type === 'user' ? item.role : undefined
+        role: type === 'user' ? item.role : undefined,
+        isPinned: type === 'question' ? item.isPinned : undefined
       }));
     }
 

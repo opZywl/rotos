@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import GlobalFilters from "./GlobalFilters";
 import { globalSearch } from "@/lib/actions/general.action";
-import { ChevronRightIcon, Loader } from "lucide-react";
+import { ChevronRightIcon, Loader, PinIcon } from "lucide-react";
 import UserDisplay from "../UserDisplay";
 
 const GlobalResult = () => {
@@ -90,7 +90,10 @@ const GlobalResult = () => {
                 >
                   <ChevronRightIcon className="dark:invert max-sm:min-w-5" />
                   <div className="flex flex-col">
-                    <p className="body-medium text-dark200_light800 line-clamp-1">
+                    <p className="body-medium text-dark200_light800 line-clamp-1 flex items-center gap-2">
+                      {item.isPinned && (
+                        <PinIcon className="size-3 text-blue-500 rotate-45" />
+                      )}
                       {item.type === 'user' ? (
                         <UserDisplay name={item.title} role={item.role} />
                       ) : (
