@@ -39,6 +39,11 @@ export const sidebarLinks: SidebarLink[] = [
     classname:"row-start-5 row-end-6 col-start-1 col-end-3",
     label: "Ask a question",
   },
+  {
+    imgURL: "/assets/icons/suitcase.svg",
+    route: "/staff",
+    label: "Staff",
+  },
 ];
 
 export const mobileSidebarLinks: SidebarLink[] = [
@@ -66,6 +71,11 @@ export const mobileSidebarLinks: SidebarLink[] = [
     route: "/ask-question",
     classname:"row-start-5 row-end-6 col-start-1 col-end-3",
     label: "Ask a question",
+  },
+  {
+    imgURL: "/assets/icons/suitcase.svg",
+    route: "/staff",
+    label: "Staff",
   },
 ];
 
